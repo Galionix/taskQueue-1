@@ -1,4 +1,7 @@
 {
+  "dependencies": {
+    "@nestjs/mapped-types": "*"
+  },
   "name": "@tasks/taskqueue",
   "version": "0.0.1",
   "private": true,
