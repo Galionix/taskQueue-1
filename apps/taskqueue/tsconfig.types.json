@@ -1,0 +1,13 @@
+{
+    "extends": "./tsconfig.json",
+    "compilerOptions": {
+      "declaration": true,
+      "declarationDir": "../frontend/server_types",
+      "emitDeclarationOnly": true,
+      "strict": true,
+      "moduleResolution": "node16",
+      "target": "ES2023",
+      "module": "node16"
+    },
+    "include": ["src/types/**/*.ts", "src/task/entities/**/*.ts", "src/**/*.dto.ts"]
+  }

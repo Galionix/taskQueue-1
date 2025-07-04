@@ -8,10 +8,12 @@
     },
     {
       "path": "./apps/taskqueue"
+    },
+    {
+      "path": "./apps/frontend"
     }
   ],
   "compilerOptions": {
     "strict": false
   }
-  // "strictPropertyInitialization": false
 }

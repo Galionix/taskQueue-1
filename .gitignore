@@ -43,3 +43,10 @@ Thumbs.db
 .cursor/rules/nx-rules.mdc
 .github/instructions/nx.instructions.md
 taskDB
+
+# Next.js
+.next
+out
+taskDB.db
+apps/taskqueue/tsconfig.types.tsbuildinfo
+apps/frontend/server_types

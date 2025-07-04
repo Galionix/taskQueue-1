@@ -15,6 +15,7 @@ export class TaskService {
     private readonly taskRepository: Repository<TaskEntity> // @InjectRepository(MessageEntity) // private readonly messagesRepositoryService: MessagesRepositoryService
   ) { }
 
+  // TODO: type guard
   async create(createTaskDto: CreateTaskDto) {
        const task = this.taskRepository.create(
       createTaskDto

@@ -1,24 +1,32 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
 import type { ExeTypes } from '../../types/exeTypes';
+import { ApiProperty } from '@nestjs/swagger';
 
-@Entity()
+@Entity("task")
 export class TaskEntity {
+  @ApiProperty()
+
   @PrimaryGeneratedColumn()
   id!:number
-
+  @ApiProperty()
   @Column()
   name!: string;
-
+  @ApiProperty()
   @Column()
-  description!: string;
+  exeType!: string
+  @ApiProperty()
+  @Column({type: 'simple-json'})
+  payload = "";
+  @ApiProperty()
+  @Column({type: 'simple-enum'})
+  dependencies!: [ExeTypes];
+  @ApiProperty()
 
-  @Column()
-  uniqueExeId!: string
+  @CreateDateColumn()
+  createdAt!: string
+  @ApiProperty()
 
-  @Column()
-  exeType!: ExeTypes
-
-  @Column()
-  notify!: boolean
+  @UpdateDateColumn()
+  updatedAt!: string
 }
