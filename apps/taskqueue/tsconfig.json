@@ -6,5 +6,16 @@
     {
       "path": "./tsconfig.app.json"
     }
-  ]
+  ],
+  "compilerOptions": {
+              "esModuleInterop": true,
+    "rootDir": ".",
+    "sourceMap": true,
+    // "declaration": false,
+    // "moduleResolution": "node",
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators": true,
+    "importHelpers": true,
+
+  }
 }

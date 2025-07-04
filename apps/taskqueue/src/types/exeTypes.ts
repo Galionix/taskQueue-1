@@ -1,0 +1,1 @@
+export type ExeTypes = 'find_on_page_elements'

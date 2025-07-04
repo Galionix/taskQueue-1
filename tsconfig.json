@@ -9,5 +9,9 @@
     {
       "path": "./apps/taskqueue"
     }
-  ]
+  ],
+  "compilerOptions": {
+    "strict": false
+  }
+  // "strictPropertyInitialization": false
 }
