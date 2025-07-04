@@ -9,5 +9,5 @@
       "target": "ES2023",
       "module": "node16"
     },
-    "include": ["src/types/**/*.ts", "src/task/entities/**/*.ts", "src/**/*.dto.ts"]
+    "include": ["src/types/**/*.ts", "src/task/entities/**/*.ts", "src/**/*.dto.ts", "src/**/*.service.ts"]
   }

@@ -9,34 +9,39 @@ import { TaskEntity } from './entities/task.entity';
 
 @Injectable()
 export class TaskService {
-
-    constructor(
+  constructor(
     @InjectRepository(TaskEntity)
     private readonly taskRepository: Repository<TaskEntity> // @InjectRepository(MessageEntity) // private readonly messagesRepositoryService: MessagesRepositoryService
-  ) { }
+  ) {}
 
-  // TODO: type guard
+  // TODO: type guard for payload
   async create(createTaskDto: CreateTaskDto) {
-       const task = this.taskRepository.create(
-      createTaskDto
-    );
+    const task = this.taskRepository.create(createTaskDto);
     const saved = await this.taskRepository.save(task);
     return saved;
   }
 
   async findAll() {
-    return await this.taskRepository.find()
+    return await this.taskRepository.find();
   }
 
-  findOne(id: number) {
+  async findOne(id: number) {
     return `This action returns a #${id} task`;
   }
 
-  update(id: number, updateTaskDto: UpdateTaskDto) {
+  async update(id: number, updateTaskDto: UpdateTaskDto) {
     return `This action updates a #${id} task`;
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} task`;
+  async remove(id: number) {
+    const exists = await this.taskRepository.findOneBy({
+      id,
+    });
+    if (exists) {
+      return await this.taskRepository.delete({
+        id,
+      });
+    }
+    return `#${id} task doesn't exist`;
   }
 }

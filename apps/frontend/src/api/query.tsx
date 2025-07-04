@@ -4,6 +4,6 @@ import { taskService } from './api';
 export const useTasks = () => {
     return useQuery({
       queryKey: ['task'],
-      queryFn: taskService.getTasks,
+      queryFn: taskService.findAll,
     });
   };
