@@ -1,0 +1,22 @@
+.createTask {
+    display: flex;
+    flex-direction: column;
+    background-color:rgb(209, 209, 209);
+    padding: 10px;
+    border-radius: 5px;
+    gap: 5px
+
+}
+.createTask * {
+    margin: 0
+}
+.header{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+
+}
+
+.header h3 {
+    cursor: pointer
+}

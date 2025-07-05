@@ -41,7 +41,7 @@ export const taskService: Omit<TaskService, 'taskRepository'> = {
   },
   remove: async (id) => {
     // surely this isnt right
-    const response = await axiosInstance.post<ReturnType<TaskService["remove"]>>('/task/'+id);
+    const response = await axiosInstance.delete<ReturnType<TaskService["remove"]>>('/task/'+id);
     return response.data;
   }
 };

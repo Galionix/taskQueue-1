@@ -20,7 +20,7 @@ export class TaskEntity {
   payload = "";
   @ApiProperty()
   @Column({type: 'simple-enum'})
-  dependencies!: [ExeTypes];
+  dependencies!: ExeTypes[];
   @ApiProperty()
 
   @CreateDateColumn()
