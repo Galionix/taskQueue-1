@@ -1,10 +1,14 @@
-import { Column, CreateDateColumn, Entity, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
 
 import type { ExeTypes } from '../../types/exeTypes';
 import { ApiProperty } from '@nestjs/swagger';
+import { QueueEntity } from '../../queue/entities/queue.entity';
 
 @Entity("task")
 export class TaskEntity {
+  constructor() {
+    this.queue = null
+  }
   @ApiProperty()
 
   @PrimaryGeneratedColumn()
@@ -29,4 +33,16 @@ export class TaskEntity {
 
   @UpdateDateColumn()
   updatedAt!: string
+
+  @ApiProperty()
+  @ManyToOne(
+    "queue",
+    "tasks",
+    {
+      nullable: true,
+      onDelete: "CASCADE",
+      orphanedRowAction: "delete",
+    }
+  )
+  queue: QueueEntity | null;
 }
