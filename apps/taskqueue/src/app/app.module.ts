@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { QueueEntity, TaskEntity } from '@tasks/library';
+import { QueueEntity, TaskEntity } from '@tasks/lib';
 
 import { QueueModule } from '../queue/queue.module';
 import { TaskModule } from '../task/task.module';

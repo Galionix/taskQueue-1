@@ -23,9 +23,6 @@
   "references": [
     {
       "path": "../../lib/tsconfig.lib.json"
-    },
-    {
-      "path": "../../library/tsconfig.lib.json"
     }
   ]
 }

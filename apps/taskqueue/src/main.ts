@@ -7,7 +7,7 @@ import { Logger } from '@nestjs/common';
 import { NestFactory } from '@nestjs/core';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
-// import { taskConstant } from '@tasks/library';
+// import { taskConstant } from '@tasks/lib';
 import { AppModule } from './app/app.module';
 
 async function bootstrap() {

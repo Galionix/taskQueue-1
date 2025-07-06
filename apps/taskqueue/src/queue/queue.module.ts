@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { QueueEntity, QueueService, TaskEntity } from '@tasks/library';
 
+import { TaskEntity } from '../task/task.entity';
 import { QueueController } from './queue.controller';
+import { QueueEntity } from './queue.entity';
+import { QueueService } from './queue.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([TaskEntity, QueueEntity])],

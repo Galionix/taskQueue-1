@@ -7,9 +7,6 @@
       "path": "../../lib"
     },
     {
-      "path": "../../library"
-    },
-    {
       "path": "./tsconfig.app.json"
     }
   ],

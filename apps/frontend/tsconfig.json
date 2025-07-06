@@ -44,9 +44,6 @@
   ],
   "references": [
     {
-      "path": "../../library"
-    },
-    {
       "path": "../../lib"
     }
   ]

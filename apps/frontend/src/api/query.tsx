@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { CreateTaskDto, TaskEntity } from '@tasks/lib';
+import { CreateTaskDtoModel, TaskModel } from '@tasks/lib';
 
 import { taskService } from './api';
 
@@ -13,7 +13,7 @@ export const useTasks = () => {
 export const useCreateTask = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<TaskEntity, Error, CreateTaskDto>({
+  return useMutation<TaskModel, Error, CreateTaskDtoModel>({
     mutationFn: taskService.create,
     onMutate: async (newTask) => {
       // Cancel any outgoing refetches
@@ -21,11 +21,11 @@ export const useCreateTask = () => {
       await queryClient.cancelQueries({ queryKey: ['task'] });
 
       // Snapshot the previous value
-      const previousTasks = queryClient.getQueryData<TaskEntity[]>(['task']);
+      const previousTasks = queryClient.getQueryData<TaskModel[]>(['task']);
 
       // Optimistically update to the new value
       if (previousTasks) {
-        queryClient.setQueryData<TaskEntity[]>(
+        queryClient.setQueryData<TaskModel[]>(
           ['task'],
           [
             ...previousTasks,

@@ -1,5 +1,8 @@
 import { Body, Controller, Delete, Get, Param, Patch, Post } from '@nestjs/common';
-import { CreateQueueDto, QueueService, UpdateQueueDto } from '@tasks/library';
+
+import { CreateQueueDto } from './create-queue.dto';
+import { QueueService } from './queue.service';
+import { UpdateQueueDto } from './update-queue.dto';
 
 @Controller('queue')
 export class QueueController {

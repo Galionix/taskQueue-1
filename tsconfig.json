@@ -23,6 +23,9 @@
     },
     {
       "path": "./library"
+    },
+    {
+      "path": "./lib"
     }
   ],
   "compilerOptions": {

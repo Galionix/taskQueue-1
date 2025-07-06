@@ -1,9 +1,10 @@
 import { useState } from 'react';
 
 import { useCreateTask } from '@/api/query';
-import { CreateTaskDto } from '@/api/types';
-import { ExeTypes, ExeTypesPayloadMap } from '@tasks/lib';
+import { CreateTaskDtoModel, ExeTypes, ExeTypesPayloadMap } from '@tasks/lib';
 
+// import { CreateTaskDto } from '@/api/types';
+// import { CreateTaskDto, ExeTypes, ExeTypesPayloadMap } from '@tasks/lib';
 import styles from './createTask.module.css';
 
 const exeTypesStrings = Object.keys(ExeTypes).filter((maybeKey) =>
@@ -13,7 +14,7 @@ export const CreateTask = () => {
   const d = useCreateTask();
   const [shown, setShown] = useState(false);
 
-  const [state, setState] = useState<CreateTaskDto>({
+  const [state, setState] = useState<CreateTaskDtoModel>({
     dependencies: [],
     exeType: exeTypesStrings[0],
     name: 'Task Name',
@@ -22,7 +23,7 @@ export const CreateTask = () => {
   console.log('state: ', state);
 
   const updateKey =
-    (key: keyof CreateTaskDto) => (value: string | ExeTypes[]) => {
+    (key: keyof CreateTaskDtoModel) => (value: string | ExeTypes[]) => {
       setState({
         ...state,
         [key]: value,
@@ -30,7 +31,7 @@ export const CreateTask = () => {
     };
 
   const toggleArrayEl =
-    (key: keyof CreateTaskDto) => (value: string | ExeTypes[]) => {
+    (key: keyof CreateTaskDtoModel) => (value: string | ExeTypes[]) => {
       const existingArray = state[key] as any[];
       if (existingArray.includes(value)) {
         setState({

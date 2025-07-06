@@ -1,1 +1,6 @@
-export const taskConstant = 'taskConstant'
+export enum ETaskState {
+  'stopped',
+  'paused',
+  'error',
+  'running',
+}
