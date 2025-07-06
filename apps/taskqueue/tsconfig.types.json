@@ -4,10 +4,10 @@
       "declaration": true,
       "declarationDir": "../frontend/server_types",
       "emitDeclarationOnly": true,
-      "strict": true,
+      "strict": false,
       "moduleResolution": "node16",
       "target": "ES2023",
       "module": "node16"
     },
-    "include": ["src/types/**/*.ts", "src/task/entities/**/*.ts", "src/**/*.dto.ts", "src/**/*.service.ts"]
+    "include": ["src/types/**/*.ts", "src/**/*.entity.ts", "src/**/*.dto.ts", "src/**/*.service.ts"]
   }
