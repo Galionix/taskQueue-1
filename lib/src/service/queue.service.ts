@@ -1,15 +1,14 @@
-import { Injectable } from '@nestjs/common';
-import { CreateQueueDto } from './dto/create-queue.dto';
-import { UpdateQueueDto } from './dto/update-queue.dto';
-import { InjectRepository } from '@nestjs/typeorm';
-import { QueueEntity } from './entities/queue.entity';
 import { Repository } from 'typeorm';
 
-const defaultQueueParameters:Partial<QueueEntity> = {
-  state: 'paused',
-  currentTaskName: ''
+import { Injectable } from '@nestjs/common';
+import { InjectRepository } from '@nestjs/typeorm';
 
-}
+import { CreateQueueDto, QueueEntity, UpdateQueueDto } from '../entity';
+
+const defaultQueueParameters: Partial<QueueEntity> = {
+  state: 'paused',
+  currentTaskName: '',
+};
 @Injectable()
 export class QueueService {
   constructor(
@@ -17,7 +16,10 @@ export class QueueService {
     private readonly queueRepository: Repository<QueueEntity> // @InjectRepository(MessageEntity) // private readonly messagesRepositoryService: MessagesRepositoryService
   ) {}
   async create(createQueueDto: CreateQueueDto) {
-    const task = this.queueRepository.create({...createQueueDto, ...defaultQueueParameters});
+    const task = this.queueRepository.create({
+      ...createQueueDto,
+      ...defaultQueueParameters,
+    });
     const saved = await this.queueRepository.save(task);
     return saved;
   }

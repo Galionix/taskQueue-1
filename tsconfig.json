@@ -11,6 +11,18 @@
     },
     {
       "path": "./apps/frontend"
+    },
+    {
+      "path": "./lib"
+    },
+    {
+      "path": "./lib"
+    },
+    {
+      "path": "./library"
+    },
+    {
+      "path": "./library"
     }
   ],
   "compilerOptions": {

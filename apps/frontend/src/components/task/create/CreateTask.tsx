@@ -1,6 +1,9 @@
-import { useCreateTask } from '@/api/query';
-import { CreateTaskDto, ExeTypes, ExeTypesPayloadMap } from '@/api/types';
 import { useState } from 'react';
+
+import { useCreateTask } from '@/api/query';
+import { CreateTaskDto } from '@/api/types';
+import { ExeTypes, ExeTypesPayloadMap } from '@tasks/lib';
+
 import styles from './createTask.module.css';
 
 const exeTypesStrings = Object.keys(ExeTypes).filter((maybeKey) =>

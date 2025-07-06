@@ -1,24 +1,6 @@
 import axiosInstance from './instance';
 import { TaskService } from './types';
 
-// export const taskService = {
-//   getTasks: async (): ReturnType<TaskService["findAll"]> => {
-//     const response = await axiosInstance.get<TTaskEntity[]>('/task');
-//     return response.data;
-//   },
-
-//   getTaskById: async (id: number): ReturnType<TaskService["findOne"]> => {
-//     const response = await axiosInstance.get(`/task/${id}`);
-//     return response.data;
-//   },
-
-//   createTask: async (userData: CreateTaskDto): ReturnType<TaskService["create"]> => {
-//     const response = await axiosInstance.post<TTaskEntity>('/task', userData);
-//     return response.data;
-//   },
-// };
-
-
 export const taskService: Omit<TaskService, 'taskRepository'> = {
   findAll: async () => {
     const response = await axiosInstance.get<ReturnType<TaskService["findAll"]>>('/task');

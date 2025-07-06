@@ -1,10 +1,13 @@
-import { Column, CreateDateColumn, Entity, ManyToOne, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn } from 'typeorm';
+import {
+    Column, CreateDateColumn, Entity, OneToMany, PrimaryGeneratedColumn, UpdateDateColumn
+} from 'typeorm';
 
-import type { ExeTypes } from '../../types/exeTypes';
 import { ApiProperty } from '@nestjs/swagger';
-import { TaskEntity } from '../../task/entities/task.entity';
 
+// import { ApiProperty } from '@nestjs/swagger';
+import { TaskEntity } from '../task/task.entity';
 
+// import type { ExeTypes } from '../../constants/exeTypes';
 @Entity("queue")
 export class QueueEntity {
 

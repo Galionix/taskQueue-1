@@ -50,3 +50,6 @@ out
 taskDB.db
 apps/taskqueue/tsconfig.types.tsbuildinfo
 apps/frontend/server_types
+
+vite.config.*.timestamp*
+vitest.config.*.timestamp*

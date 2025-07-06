@@ -4,18 +4,23 @@
   "include": [],
   "references": [
     {
+      "path": "../../lib"
+    },
+    {
+      "path": "../../library"
+    },
+    {
       "path": "./tsconfig.app.json"
     }
   ],
   "compilerOptions": {
-              "esModuleInterop": true,
+    "esModuleInterop": true,
     "rootDir": ".",
     "sourceMap": true,
     // "declaration": false,
     // "moduleResolution": "node",
     "emitDecoratorMetadata": true,
     "experimentalDecorators": true,
-    "importHelpers": true,
-
+    "importHelpers": true
   }
 }

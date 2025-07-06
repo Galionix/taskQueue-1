@@ -2,9 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "dist",
-    "types": [
-      "node"
-    ],
+    "types": ["node"],
     "rootDir": "src",
     "tsBuildInfoFile": "dist/tsconfig.app.tsbuildinfo",
     "experimentalDecorators": true,
@@ -12,11 +10,22 @@
     "target": "es2021"
   },
   "include": [
-    "src/**/*.ts"
+    "src/**/*.ts",
+    "../../lib/src/index.ts",
+    "../../lib/src/entity/queue/queue.entity.ts",
+    "../../lib/src/entity/task/task.entity.ts",
+    "../../lib/src/constants/exeTypes.ts",
+    "../../lib/src/constants/shared.types.ts",
+    "../../lib/src/service/task.service.ts",
+    "../../lib/src/service/queue.service.ts"
   ],
-  "exclude": [
-    "eslint.config.js",
-    "eslint.config.cjs",
-    "eslint.config.mjs"
+  "exclude": ["eslint.config.js", "eslint.config.cjs", "eslint.config.mjs"],
+  "references": [
+    {
+      "path": "../../lib/tsconfig.lib.json"
+    },
+    {
+      "path": "../../library/tsconfig.lib.json"
+    }
   ]
 }

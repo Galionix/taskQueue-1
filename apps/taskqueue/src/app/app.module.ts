@@ -1,12 +1,11 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { QueueEntity, TaskEntity } from '@tasks/library';
 
+import { QueueModule } from '../queue/queue.module';
+import { TaskModule } from '../task/task.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { TaskModule } from '../task/task.module';
-import { TaskEntity } from '../task/entities/task.entity';
-import { QueueModule } from '../queue/queue.module';
-import { QueueEntity } from '../queue/entities/queue.entity';
 
 @Module({
   imports: [

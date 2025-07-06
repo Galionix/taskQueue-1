@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { CreateTaskDto, TaskEntity } from '@tasks/lib';
+
 import { taskService } from './api';
-import { CreateTaskDto, TTaskEntity } from './types';
 
 export const useTasks = () => {
   return useQuery({
@@ -12,7 +13,7 @@ export const useTasks = () => {
 export const useCreateTask = () => {
   const queryClient = useQueryClient();
 
-  return useMutation<TTaskEntity, Error, CreateTaskDto>({
+  return useMutation<TaskEntity, Error, CreateTaskDto>({
     mutationFn: taskService.create,
     onMutate: async (newTask) => {
       // Cancel any outgoing refetches
@@ -20,17 +21,18 @@ export const useCreateTask = () => {
       await queryClient.cancelQueries({ queryKey: ['task'] });
 
       // Snapshot the previous value
-      const previousTasks = queryClient.getQueryData<TTaskEntity[]>(['task']);
+      const previousTasks = queryClient.getQueryData<TaskEntity[]>(['task']);
 
       // Optimistically update to the new value
       if (previousTasks) {
-        queryClient.setQueryData<TTaskEntity[]>(
+        queryClient.setQueryData<TaskEntity[]>(
           ['task'],
           [
             ...previousTasks,
             {
               id: Math.random(),
               ...newTask,
+              queue: null,
               createdAt: new Date().getDate().toLocaleString(),
               updatedAt: new Date().getDate().toLocaleString(),
             },
