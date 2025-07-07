@@ -1,8 +1,10 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { QueueEntity, TaskEntity } from '@tasks/lib';
 
+import { QueueEngineModule } from '../queue-engine/queue-engine.module';
+import { QueueEntity } from '../queue/queue.entity';
 import { QueueModule } from '../queue/queue.module';
+import { TaskEntity } from '../task/task.entity';
 import { TaskModule } from '../task/task.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -17,7 +19,8 @@ import { AppService } from './app.service';
       autoLoadEntities: true,
     }),
     TaskModule,
-    QueueModule
+    QueueModule,
+    QueueEngineModule,
   ],
   controllers: [AppController],
   providers: [AppService],

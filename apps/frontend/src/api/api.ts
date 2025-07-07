@@ -1,6 +1,10 @@
 import axiosInstance from './instance';
 
-import type { ITaskService } from '@tasks/lib';
+import type {
+  IQueueEngineService,
+  IQueueService,
+  ITaskService,
+} from '@tasks/lib';
 
 export const taskService: Omit<ITaskService, 'taskRepository'> = {
   findAll: async () => {
@@ -38,3 +42,49 @@ export const taskService: Omit<ITaskService, 'taskRepository'> = {
     return response.data;
   },
 };
+
+export const queueService: Omit<IQueueService, 'queueRepository'> = {
+  findAll: async () => {
+    const response = await axiosInstance.get<
+      ReturnType<IQueueService['findAll']>
+    >('/queue');
+    return response.data;
+  },
+
+  findOne: async (id) => {
+    const response = await axiosInstance.get<
+      ReturnType<IQueueService['findOne']>
+    >(`/queue/${id}`);
+    return response.data;
+  },
+
+  create: async (userData) => {
+    const response = await axiosInstance.post<
+      ReturnType<IQueueService['create']>
+    >('/queue', userData);
+    return response.data;
+  },
+  update: async (id, updateTaskDto) => {
+    const response = await axiosInstance.patch<
+      ReturnType<IQueueService['update']>
+    >('/queue/' + id, updateTaskDto);
+    return response.data;
+  },
+  remove: async (id) => {
+    // surely this isnt right
+    const response = await axiosInstance.delete<
+      ReturnType<IQueueService['remove']>
+    >('/queue/' + id);
+    return response.data;
+  },
+};
+
+export const queueEngineService: Omit<IQueueEngineService, 'queueRepository'> =
+  {
+    restart: async () => {
+      const response = await axiosInstance.post<
+        ReturnType<IQueueEngineService['restart']>
+      >('/queue-engine/restart');
+      return response.data;
+    },
+  };

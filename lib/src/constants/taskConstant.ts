@@ -3,4 +3,10 @@ export enum ETaskState {
   'paused',
   'error',
   'running',
+  'locked',
+}
+
+export enum ELockStrategy {
+  'pauseOnLock',
+  'skipTask',
 }

@@ -12,12 +12,12 @@ export class TaskEntity extends TaskModel {
   constructor(
     id: number,
     name: string,
-    exeType: string,
+    exeType: keyof typeof ExeTypes,
     payload: string,
-    dependencies: keyof (typeof ExeTypes)[],
+    dependencies: ExeTypes[],
     createdAt: string,
     updatedAt: string,
-    queue: QueueModel | null
+    queue: QueueModel['id'] | null
   ) {
     super(
       id,
@@ -38,14 +38,14 @@ export class TaskEntity extends TaskModel {
   @Column()
   override name!: string;
   @ApiProperty()
-  @Column()
-  override exeType!: string;
+  @Column({ type: 'varchar' })
+  override exeType!: keyof typeof ExeTypes;
   @ApiProperty()
   @Column({ type: 'simple-json' })
   override payload = '';
   @ApiProperty()
   @Column({ type: 'simple-enum' })
-  override dependencies!: keyof (typeof ExeTypes)[];
+  override dependencies!: ExeTypes[];
   @ApiProperty()
   @CreateDateColumn()
   override createdAt!: string;
@@ -59,5 +59,5 @@ export class TaskEntity extends TaskModel {
     onDelete: 'CASCADE',
     orphanedRowAction: 'delete',
   })
-  override queue: QueueEntity | null;
+  override queue: QueueEntity['id'] | null;
 }

@@ -3,8 +3,6 @@ import { useState } from 'react';
 import { useCreateTask } from '@/api/query';
 import { CreateTaskDtoModel, ExeTypes, ExeTypesPayloadMap } from '@tasks/lib';
 
-// import { CreateTaskDto } from '@/api/types';
-// import { CreateTaskDto, ExeTypes, ExeTypesPayloadMap } from '@tasks/lib';
 import styles from './createTask.module.css';
 
 const exeTypesStrings = Object.keys(ExeTypes).filter((maybeKey) =>
@@ -20,7 +18,6 @@ export const CreateTask = () => {
     name: 'Task Name',
     payload: JSON.stringify(ExeTypesPayloadMap[0], null, 2),
   });
-  console.log('state: ', state);
 
   const updateKey =
     (key: keyof CreateTaskDtoModel) => (value: string | ExeTypes[]) => {
@@ -93,6 +90,7 @@ export const CreateTask = () => {
           <select
             value={state.dependencies as unknown as string[]}
             multiple={true}
+            // eslint-disable-next-line @typescript-eslint/no-empty-function
             onChange={(e) => {}}
           >
             {exeTypesStrings

@@ -6,22 +6,22 @@ export class TaskModel {
   constructor(
     public id: number,
     public name: string,
-    public exeType: string,
+    public exeType: keyof typeof ExeTypes,
     public payload: string,
-    public dependencies: keyof typeof ExeTypes[],
+    public dependencies: ExeTypes[],
     public createdAt: string,
     public updatedAt: string,
-    public queue: QueueModel | null
+    public queue: QueueModel['id'] | null
   ) {}
 }
 
 export class CreateTaskDtoModel {
   constructor(
-     public name: string,
+    public name: string,
     public exeType: string,
     public payload: string,
-    public dependencies: keyof typeof ExeTypes[],
-  ){}
+    public dependencies: ExeTypes[]
+  ) {}
 }
 export class UpdateTaskDtoModel {
   constructor(
@@ -29,16 +29,19 @@ export class UpdateTaskDtoModel {
     public name?: string,
     public exeType?: string,
     public payload?: string,
-    public dependencies?: keyof typeof ExeTypes[],
+    public dependencies?: ExeTypes[],
     public createdAt?: string,
     public updatedAt?: string,
-    public queue?: QueueModel | null
+    public queue?: QueueModel['id'] | null
   ) {}
 }
 export interface ITaskService {
   create(createTaskDto: CreateTaskDtoModel): Promise<TaskModel>;
   findAll(): Promise<TaskModel[]>;
-  findOne(id: number): Promise<string>;
+  findOne(id: number): Promise<TaskModel | null>;
+  setQueueToTasks(taskIds: number[], id: number): Promise<string | TaskModel[]>;
   update(id: number, updateTaskDto: UpdateTaskDtoModel): Promise<string>;
   remove(id: number): Promise<string | DeleteResult>;
+  removeQueueFromTasks(taskIds: number[]): Promise<string | TaskModel[]>;
+  findByIds(ids: number[]): Promise<TaskModel[]>;
 }
