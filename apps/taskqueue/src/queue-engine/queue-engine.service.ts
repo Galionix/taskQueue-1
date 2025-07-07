@@ -9,6 +9,7 @@ import { QueueService } from '../queue/queue.service';
 import { TaskEntity } from '../task/task.entity';
 import { TaskService } from '../task/task.service';
 import { taskProcessors } from './taskProcessors';
+import { Browser } from 'puppeteer-core';
 
 @Injectable()
 export class QueueEngineService implements OnModuleInit, IQueueEngineService {
@@ -21,6 +22,7 @@ export class QueueEngineService implements OnModuleInit, IQueueEngineService {
       };
     };
   } = {};
+  private browser: Browser | null = null;
   constructor(
     private readonly queueRepository: QueueService,
     private readonly taskRepository: TaskService
@@ -40,6 +42,7 @@ export class QueueEngineService implements OnModuleInit, IQueueEngineService {
       connectOption: {},
       // defaultViewport: null, // Use the default viewport size
     });
+    this.browser = browser.browser as any
     browser.page.setViewport(null); // Set viewport to null to use the default size
     // Set the browser to be used in the task processors
     taskProcessors.setBrowser(browser.browser as any);
@@ -82,21 +85,30 @@ export class QueueEngineService implements OnModuleInit, IQueueEngineService {
           Logger.log(`Task ${task.id} processed successfully.`);
         } catch (error) {
           // free all task resources
-          const processor = taskProcessors.getProcessor(task.exeType);
-          if (processor && processor.blocks) {
-            for (const block of processor.blocks) {
-              taskProcessors.removeBlockedResource(block);
-            }
-          }
+          // const processor = taskProcessors.getProcessor(task.exeType);
+          // if (processor && processor.blocks) {
+          //   for (const block of processor.blocks) {
+          //     taskProcessors.removeBlockedResource(block);
+          //   }
+          // }
 
-          this.blocked = false;
-          Logger.log(`Task ${task.id} is no longer blocked.`);
+          // this.blocked = false;
+          // Logger.log(`Task ${task.id} is no longer blocked.`);
           Logger.error(`Error processing task ${task.id}:`, error);
         }
       }
     });
     job.start();
-    const tasks = await this.taskRepository.findByIds(queue.tasks || []);
+    const unorderedTasks = await this.taskRepository.findByIds(queue.tasks || []);
+    console.log('unorderedTasks: ', unorderedTasks);
+    const tasks = queue.tasks.map((taskId) => {
+      const task = unorderedTasks.find((t) => t.id == taskId);
+      if (!task) {
+        console.error(`Task with ID ${taskId} not found for queue: ${queue.id}`);
+      }
+      return task!;
+    }).filter(Boolean)
+    console.log('tasks: ', tasks);
     if (!tasks) {
       console.error(`No tasks found for queue: ${queue.id}`);
       return;
@@ -120,7 +132,36 @@ export class QueueEngineService implements OnModuleInit, IQueueEngineService {
   }
 
   async restart() {
+    // this.schedules
+    // cancel all crons for schedules
+    console.log('Cancelling all scheduled jobs...');
+    Object.values(this.schedules).forEach((schedule) => {
+      schedule.job.stop();
+    });
+    this.schedules = {}; // Clear the schedules
     console.log('Restarting Queue Engine...');
+    // restart browser
+    if (this.browser) {
+      console.log('this.browser: ', this.browser);
+      await this.browser.close();
+      this.browser = null;
+    }
+    const browser = await connect({
+      headless: false, // Set to false if you want to see the browser
+
+      // args: ['--no-sandbox', '--disable-setuid-sandbox'],
+      customConfig: {
+        // executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe', // Adjust this path as needed
+        userDataDir:
+          'C:\\Users\\galio\\AppData\\Local\\Google\\Chrome\\User Data\\Default', // Directory to store user data
+      },
+      connectOption: {},
+      // defaultViewport: null, // Use the default viewport size
+    });
+    this.browser = browser.browser as any
+    browser.page.setViewport(null); // Set viewport to null to use the default size
+    // Set the browser to be used in the task processors
+    taskProcessors.setBrowser(browser.browser as any);
     // Logic to restart the queue engine, e.g., re-initialize schedules
     const activeQueues = await this.queueRepository.findActive();
     console.log('Re-initializing schedules for active queues:', activeQueues);
@@ -139,24 +180,24 @@ export class QueueEngineService implements OnModuleInit, IQueueEngineService {
       return;
     }
     // check blocked resources
-    if (processor.blocks && processor.blocks.length > 0) {
-      // taskProcessors
-      for (const block of processor.blocks) {
-        if (taskProcessors.isResourceBlocked(block)) {
-          Logger.warn(`Resource blocked: ${block}`);
-          this.blocked = true;
-          return;
-        }
-      }
-      // If all resources are available, remove the blocked state
-      this.blocked = false;
-    }
+    // if (processor.blocks && processor.blocks.length > 0) {
+    //   // taskProcessors
+    //   for (const block of processor.blocks) {
+    //     if (taskProcessors.isResourceBlocked(block)) {
+    //       Logger.warn(`Resource blocked: ${block}`);
+    //       this.blocked = true;
+    //       return;
+    //     }
+    //   }
+    //   // If all resources are available, remove the blocked state
+    //   this.blocked = false;
+    // }
     // If no resources are blocked, proceed with task execution
-    if (this.blocked) {
-      Logger.warn(`Task ${task.id} is blocked due to resource constraints.`);
-      return;
-    }
+    // if (this.blocked) {
+    //   Logger.warn(`Task ${task.id} is blocked due to resource constraints.`);
+    //   return;
+    // }
     await processor.execute(task, storage);
   }
-  blocked = false;
+  // blocked = false;
 }

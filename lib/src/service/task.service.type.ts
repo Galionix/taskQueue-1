@@ -1,4 +1,4 @@
-import type { DeleteResult } from 'typeorm';
+import type { DeleteResult, UpdateResult } from 'typeorm';
 import { ExeTypes } from '../constants/exeTypes.js';
 import { QueueModel } from './queue.service.type.js';
 
@@ -40,7 +40,7 @@ export interface ITaskService {
   findAll(): Promise<TaskModel[]>;
   findOne(id: number): Promise<TaskModel | null>;
   setQueueToTasks(taskIds: number[], id: number): Promise<string | TaskModel[]>;
-  update(id: number, updateTaskDto: UpdateTaskDtoModel): Promise<string>;
+  update(id: number, updateTaskDto: UpdateTaskDtoModel): Promise<UpdateResult>;
   remove(id: number): Promise<string | DeleteResult>;
   removeQueueFromTasks(taskIds: number[]): Promise<string | TaskModel[]>;
   findByIds(ids: number[]): Promise<TaskModel[]>;

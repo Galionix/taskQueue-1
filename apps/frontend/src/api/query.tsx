@@ -5,9 +5,11 @@ import {
   ETaskState,
   QueueModel,
   TaskModel,
+  UpdateTaskDtoModel,
 } from '@tasks/lib';
 
 import { queueService, taskService } from './api';
+import { UpdateResult } from 'typeorm';
 
 export const useTasks = () => {
   return useQuery({
@@ -217,3 +219,50 @@ export const useUpdateQueue = () => {
     },
   });
 };
+
+export const useUpdateTask = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    UpdateResult,
+    Error,
+    {
+      id: number;
+      data: UpdateTaskDtoModel;
+    }
+  >({
+    mutationFn: ({ id, data }) => taskService.update(id, data),
+    onMutate: async (updatedTask) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['task'] });
+
+      // Snapshot the previous value
+      const previousTasks = queryClient.getQueryData<TaskModel[]>(['task']);
+
+      // Optimistically update to the new value
+      if (previousTasks) {
+        queryClient.setQueryData<TaskModel[]>(
+          ['task'],
+          previousTasks.map((t) =>
+            t.id === updatedTask.id ? { ...t, ...updatedTask } : t
+          )
+        );
+      }
+
+      return previousTasks;
+    },
+    onSuccess: (newTask) => {
+      // Invalidate or update relevant queries after successful task update
+      queryClient.invalidateQueries({ queryKey: ['task'] });
+      console.log('Task updated successfully:', newTask);
+    },
+    onError: (error) => {
+      console.error('Error updating Task:', error);
+      // Handle error, e.g., display a toast notification
+    },
+    // Always refetch after error or success:
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['task'] });
+    },
+  });
+}

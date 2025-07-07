@@ -46,10 +46,6 @@ export class QueueEntity extends QueueModel {
 
   @ApiProperty()
   @Column('simple-array', { default: '' })
-  // @OneToMany(() => TaskEntity, (task) => task.queue, {
-  //   type: 'simple-array',
-  //   cascade: ['remove'],
-  // })
   override tasks!: TaskEntity['id'][];
 
   @ApiProperty()

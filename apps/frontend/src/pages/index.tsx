@@ -7,6 +7,7 @@ import { useRestartQueueEngine } from '../api/engine';
 import { CreateQueue } from '../components/queue/create/CreateQueue';
 import { EditQueue } from '../components/queue/edit/EditQueue';
 import styles from './index.module.css';
+import { EditTask } from '@/components/task/edit/EditTask';
 
 export function Index() {
   const restartQueueEngine = useRestartQueueEngine();
@@ -94,8 +95,9 @@ export function Index() {
           })
           .map((t) => (
             <li key={t.id}>
-              <span>{`Name:  ${t.name}`}</span>
-              <button onClick={() => d.mutate(t.id)}>x</button>
+              <EditTask task={t} />
+              {/* <span>{`Name:  ${t.name}`}</span>
+              <button onClick={() => d.mutate(t.id)}>x</button> */}
             </li>
           ))}
       </ul>

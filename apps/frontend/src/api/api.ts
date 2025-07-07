@@ -29,7 +29,7 @@ export const taskService: Omit<ITaskService, 'taskRepository'> = {
   },
   update: async (id, updateTaskDto) => {
     // surely this isnt right
-    const response = await axiosInstance.post<
+    const response = await axiosInstance.patch<
       ReturnType<ITaskService['update']>
     >('/task/' + id, updateTaskDto);
     return response.data;

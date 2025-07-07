@@ -30,17 +30,15 @@ export const notifyWithMessageFromStore = (): taskProcessorType => {
       const msg = {
         ...payload,
         message: storage.message || payload.message, // required
-
       };
 
       p.send(msg, function (err, result) {
         if (err) {
           throw err;
         }
-
         console.log(result);
       });
-
+      storage.message =''; // Clear the message after sending notification
       //   const message = storage.message || 'No message found';
       //   console.log(`Notifying with message: ${message}`);
       return {

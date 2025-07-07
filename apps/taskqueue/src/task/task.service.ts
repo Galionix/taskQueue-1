@@ -59,8 +59,8 @@ export class TaskService implements ITaskService {
     id: number,
     updateTaskDto: UpdateTaskDto
   ) => {
-    await this.taskRepository.update(id, updateTaskDto);
-    return `This action updates a #${id} task`;
+    return await this.taskRepository.update(id, updateTaskDto);
+
   };
 
   remove: ITaskService['remove'] = async (id: number) => {

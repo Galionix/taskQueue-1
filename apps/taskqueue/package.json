@@ -50,5 +50,8 @@
         "command": "docker build -f apps/taskqueue/Dockerfile . -t tasks-taskqueue"
       }
     }
+  },
+  "devDependencies": {
+    "@nx/vite": "^21.2.2"
   }
 }

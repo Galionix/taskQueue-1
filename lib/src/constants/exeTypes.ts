@@ -9,6 +9,7 @@ export const ExeTypesPayloadMap = {
   [ExeTypes.find_on_page_elements]: {
     url: 'google.com',
     queryToCount: '#ai-helper-widget',
+    extractText: true, // if true, will extract text from the element
   },
   [ExeTypes.open_browser_tab]: {
     url: 'google.com',

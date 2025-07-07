@@ -40,22 +40,28 @@ export const openBrowserTab = ():taskProcessorType => {
           success: true,
           message: `Tab with URL ${payload.url} is already open, brought to the front.`,
           data: {
+            page: existingTab,
             url: payload.url,
-            tabId: existingTab.target()._targetId, // Assuming you want to return the tab ID
+            // tabId: existingTab.target()._targetId, // Assuming you want to return the tab ID
           },
         };
       } else {
         // Open a new tab with the specified URL
         const newPage = await browser.newPage();
-        await newPage.goto(payload.url, { waitUntil: 'networkidle0' });
+        await newPage.goto(payload.url);
+        // sleep 5 seconds to ensure the page is loaded
+        const wait = (ms: number) =>
+          new Promise((resolve) => setTimeout(resolve, ms));
+        await wait(5000); // Adjust the wait time as needed
         console.log(`Opened new tab with URL: ${payload.url}`);
         taskProcessors.removeBlockedResource(EResourceType.browser);
         return {
           success: true,
           message: `Opened new tab with URL: ${payload.url}`,
           data: {
+            page: newPage,
             url: payload.url,
-            tabId: newPage.target()._targetId, // Assuming you want to return the tab ID
+            // tabId: newPage.target()._targetId, // Assuming you want to return the tab ID
           },
         };
       }
