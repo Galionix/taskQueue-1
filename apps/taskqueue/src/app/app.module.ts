@@ -8,6 +8,7 @@ import { QueueEntity } from '../queue/queue.entity';
 import { QueueModule } from '../queue/queue.module';
 import { TaskEntity } from '../task/task.entity';
 import { TaskModule } from '../task/task.module';
+import { DocsModule } from '../docs/docs.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -25,6 +26,7 @@ import { AppService } from './app.service';
     QueueEngineModule,
     PushoverModule,
     TelegramModule,
+    DocsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

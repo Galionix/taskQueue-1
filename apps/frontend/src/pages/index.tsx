@@ -2,6 +2,7 @@ import { useState } from 'react';
 
 import { useDeleteTask, useQueues, useTasks } from '@/api/query';
 import { CreateTask } from '@/components/task/create/CreateTask';
+import { Layout } from '@/components/layout';
 
 import { useRestartQueueEngine } from '../api/engine';
 import { CreateQueue } from '../components/queue/create/CreateQueue';
@@ -65,21 +66,10 @@ export function Index() {
     );
 
   return (
-    <div className={styles.page}>
-      {/* Header */}
-      <header className={styles.header}>
-        <div className={styles.headerContent}>
-          <h1 className={styles.title}>🎯 Task Queue Dashboard</h1>
-          <button
-            onClick={restartEngine}
-            className={styles.restartButton}
-            disabled={restartQueueEngine.isPending}
-          >
-            {restartQueueEngine.isPending ? '⏳' : '🔄'} Restart Engine
-          </button>
-        </div>
-      </header>
-
+    <Layout
+      onRestartEngine={restartEngine}
+      isRestartingEngine={restartQueueEngine.isPending}
+    >
       <div className={styles.container}>
         {/* Queues Section */}
         <section className={styles.section}>
@@ -140,7 +130,7 @@ export function Index() {
           </div>
         </section>
       </div>
-    </div>
+    </Layout>
   );
 }
 

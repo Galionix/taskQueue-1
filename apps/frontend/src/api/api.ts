@@ -4,6 +4,11 @@ import type {
   IQueueEngineService,
   IQueueService,
   ITaskService,
+  IDocsService,
+  ApiResponse,
+  FileNode,
+  SearchResult,
+  DocumentationStats,
 } from '@tasks/lib';
 
 export const taskService: Omit<ITaskService, 'taskRepository'> = {
@@ -107,3 +112,29 @@ export const queueEngineService: Omit<IQueueEngineService, 'queueRepository'> =
       return response.data;
     },
   };
+
+export const docsService: IDocsService = {
+  getProjectTree: async () => {
+    const response = await axiosInstance.get<ApiResponse<FileNode>>('/docs/tree');
+    return response.data.data;
+  },
+
+  readMarkdownFile: async (path) => {
+    const response = await axiosInstance.get<ApiResponse<{ content: string }>>(
+      `/docs/file/${path}`
+    );
+    return response.data.data.content;
+  },
+
+  searchInDocumentation: async (query) => {
+    const response = await axiosInstance.get<ApiResponse<SearchResult[]>>(
+      `/docs/search/${encodeURIComponent(query)}`
+    );
+    return response.data.data;
+  },
+
+  getDocumentationStats: async () => {
+    const response = await axiosInstance.get<ApiResponse<DocumentationStats>>('/docs/stats');
+    return response.data.data;
+  },
+};

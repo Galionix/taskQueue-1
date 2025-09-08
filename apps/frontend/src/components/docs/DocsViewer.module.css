@@ -1,0 +1,225 @@
+.docsViewer {
+  background: white;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  padding: 16px;
+  border-bottom: 1px solid #e9ecef;
+  background: #f8f9fa;
+  border-radius: 8px 8px 0 0;
+}
+
+.title {
+  margin: 0;
+  color: #343a40;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.content {
+  flex: 1;
+  padding: 24px;
+  overflow-y: auto;
+  line-height: 1.6;
+}
+
+/* Заголовки */
+.h1 {
+  color: #212529;
+  font-size: 32px;
+  font-weight: 700;
+  margin: 0 0 24px 0;
+  border-bottom: 3px solid #007bff;
+  padding-bottom: 8px;
+}
+
+.h2 {
+  color: #343a40;
+  font-size: 24px;
+  font-weight: 600;
+  margin: 32px 0 16px 0;
+  border-bottom: 2px solid #6c757d;
+  padding-bottom: 4px;
+}
+
+.h3 {
+  color: #495057;
+  font-size: 20px;
+  font-weight: 600;
+  margin: 24px 0 12px 0;
+}
+
+.h4 {
+  color: #6c757d;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 20px 0 8px 0;
+}
+
+/* Текст */
+.paragraph {
+  color: #495057;
+  margin: 0 0 16px 0;
+  font-size: 16px;
+}
+
+/* Списки */
+.listItem {
+  color: #495057;
+  margin: 0 0 8px 0;
+  font-size: 16px;
+  list-style-type: disc;
+  margin-left: 20px;
+}
+
+/* Код */
+.inlineCode {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-family: 'Fira Code', 'Courier New', monospace;
+  font-size: 14px;
+  color: #e83e8c;
+}
+
+.codeBlock {
+  background: #1e1e1e !important;
+  border: 1px solid #3c3c3c;
+  border-radius: 8px;
+  padding: 16px;
+  margin: 16px 0;
+  font-family: 'Fira Code', 'Courier New', monospace;
+  font-size: 14px;
+  color: #d4d4d4;
+  overflow-x: auto;
+  line-height: 1.5;
+}
+
+.codeBlock code {
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  color: inherit !important;
+}
+
+/* Цитаты */
+.blockquote {
+  border-left: 4px solid #007bff;
+  margin: 16px 0;
+  padding: 16px 20px;
+  background: #f8f9fa;
+  border-radius: 0 4px 4px 0;
+  font-style: italic;
+  color: #6c757d;
+}
+
+/* Таблицы */
+.tableContainer {
+  overflow-x: auto;
+  margin: 16px 0;
+  border-radius: 8px;
+  border: 1px solid #e9ecef;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+.tableHeader {
+  background: #f8f9fa;
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 2px solid #dee2e6;
+  font-weight: 600;
+  color: #495057;
+}
+
+.tableCell {
+  padding: 12px 16px;
+  border-bottom: 1px solid #dee2e6;
+  color: #495057;
+}
+
+.table tbody tr:hover {
+  background: #f8f9fa;
+}
+
+/* Ссылки */
+.content a {
+  color: #007bff;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.content a:hover {
+  color: #0056b3;
+  border-bottom-color: #0056b3;
+}
+
+/* Разделители */
+.content hr {
+  border: none;
+  border-top: 2px solid #e9ecef;
+  margin: 32px 0;
+}
+
+/* Изображения */
+.content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  margin: 16px 0;
+}
+
+/* Эмодзи и иконки */
+.content p:has(> img[src*="emoji"]) {
+  display: inline;
+}
+
+/* Специальные блоки (callouts) */
+.content blockquote:has(p:first-child:contains("Note:")),
+.content blockquote:has(p:first-child:contains("Примечание:")) {
+  border-left-color: #17a2b8;
+  background: #e7f3ff;
+}
+
+.content blockquote:has(p:first-child:contains("Warning:")),
+.content blockquote:has(p:first-child:contains("Внимание:")) {
+  border-left-color: #ffc107;
+  background: #fff3cd;
+}
+
+.content blockquote:has(p:first-child:contains("Danger:")),
+.content blockquote:has(p:first-child:contains("Опасно:")) {
+  border-left-color: #dc3545;
+  background: #f8d7da;
+}
+
+/* Scrollbar стили для overflow контента */
+.content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.content::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.content::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}

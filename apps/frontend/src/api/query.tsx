@@ -6,9 +6,12 @@ import {
   QueueModel,
   TaskModel,
   UpdateTaskDtoModel,
+  FileNode,
+  SearchResult,
+  DocumentationStats,
 } from '@tasks/lib';
 
-import { queueService, taskService } from './api';
+import { queueService, taskService, docsService } from './api';
 import { UpdateResult } from 'typeorm';
 
 export const useTasks = () => {
@@ -265,4 +268,35 @@ export const useUpdateTask = () => {
       queryClient.invalidateQueries({ queryKey: ['task'] });
     },
   });
-}
+};
+
+// Documentation hooks
+export const useDocsTree = () => {
+  return useQuery({
+    queryKey: ['docs', 'tree'],
+    queryFn: docsService.getProjectTree,
+  });
+};
+
+export const useDocsFile = (path: string) => {
+  return useQuery({
+    queryKey: ['docs', 'file', path],
+    queryFn: () => docsService.readMarkdownFile(path),
+    enabled: !!path,
+  });
+};
+
+export const useDocsSearch = (query: string) => {
+  return useQuery({
+    queryKey: ['docs', 'search', query],
+    queryFn: () => docsService.searchInDocumentation(query),
+    enabled: !!query && query.length > 0,
+  });
+};
+
+export const useDocsStats = () => {
+  return useQuery({
+    queryKey: ['docs', 'stats'],
+    queryFn: docsService.getDocumentationStats,
+  });
+};
