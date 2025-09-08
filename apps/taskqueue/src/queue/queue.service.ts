@@ -42,28 +42,19 @@ export class QueueService implements IQueueService {
   findAll: IQueueService['findAll'] = async () => {
     const queues = await this.queueRepository.find();
     // Transform simple-array field to ensure it's always an array of numbers
-    return queues.map((queue) => {
-      let tasks: number[] = [];
-      
-      // TypeORM simple-array can return string or array, need to handle both
-      const queueTasks = queue.tasks as unknown;
-      
-      if (Array.isArray(queueTasks)) {
-        tasks = queueTasks.map((id: any) =>
-          typeof id === 'string' ? parseInt(id, 10) : id
-        );
-      } else if (typeof queueTasks === 'string' && queueTasks.length > 0) {
-        tasks = queueTasks
-          .split(',')
-          .filter(Boolean)
-          .map((id: string) => parseInt(id.trim(), 10));
-      }
-      
-      return {
-        ...queue,
-        tasks,
-      };
-    });
+    return queues.map((queue) => ({
+      ...queue,
+      tasks: Array.isArray(queue.tasks)
+        ? queue.tasks.map((id: string | number) =>
+            typeof id === 'string' ? parseInt(id, 10) : id
+          )
+        : typeof queue.tasks === 'string'
+        ? (queue.tasks as string)
+            .split(',')
+            .filter(Boolean)
+            .map((id: string) => parseInt(id.trim(), 10))
+        : [],
+    }));
   };
 
   findOne: IQueueService['findOne'] = async (id: number) => {
