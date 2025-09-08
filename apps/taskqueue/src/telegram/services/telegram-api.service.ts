@@ -165,6 +165,67 @@ export class TelegramApiService {
   }
 
   /**
+   * Send photo to chat
+   */
+  async sendPhoto(chatId: string, photoPath: string, caption?: string): Promise<void> {
+    try {
+      const FormData = require('form-data');
+      const fs = require('fs');
+      
+      const form = new FormData();
+      form.append('chat_id', chatId);
+      form.append('photo', fs.createReadStream(photoPath));
+      if (caption) {
+        form.append('caption', caption);
+        form.append('parse_mode', 'HTML');
+      }
+
+      await axios.post(`${this.API_URL}/sendPhoto`, form, {
+        headers: form.getHeaders(),
+      });
+      
+      this.logger.log(`Photo sent to chat ${chatId}: ${photoPath}`);
+    } catch (error) {
+      this.handleApiError(error, 'Failed to send photo');
+      throw error;
+    }
+  }
+
+  /**
+   * Send multiple photos as media group
+   */
+  async sendMediaGroup(chatId: string, photoPaths: string[], caption?: string): Promise<void> {
+    try {
+      const FormData = require('form-data');
+      const fs = require('fs');
+      
+      const form = new FormData();
+      form.append('chat_id', chatId);
+      
+      const media = photoPaths.map((path, index) => ({
+        type: 'photo',
+        media: `attach://photo${index}`,
+        ...(index === 0 && caption ? { caption, parse_mode: 'HTML' } : {})
+      }));
+      
+      form.append('media', JSON.stringify(media));
+      
+      photoPaths.forEach((path, index) => {
+        form.append(`photo${index}`, fs.createReadStream(path));
+      });
+
+      await axios.post(`${this.API_URL}/sendMediaGroup`, form, {
+        headers: form.getHeaders(),
+      });
+      
+      this.logger.log(`Media group sent to chat ${chatId}: ${photoPaths.length} photos`);
+    } catch (error) {
+      this.handleApiError(error, 'Failed to send media group');
+      throw error;
+    }
+  }
+
+  /**
    * Handle API errors with detailed logging
    */
   private handleApiError(error: unknown, context: string): void {

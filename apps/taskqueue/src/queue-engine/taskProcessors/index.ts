@@ -28,6 +28,27 @@ export type taskProcessorsType = {
 export class TaskProcessors {
   public browser: Browser | null = null;
   public blockedResources: EResourceType[] = [];
+  private telegramApiService: any; // Будет инжектиться через DI
+  private processors: taskProcessorsType;
+
+  constructor(telegramApiService?: any) {
+    this.telegramApiService = telegramApiService;
+    this.initProcessors();
+  }
+
+  private initProcessors() {
+    this.processors = {
+      find_on_page_elements: findOnPageElements(),
+      open_browser_tab: openBrowserTab(),
+      notify_with_message_from_store: notifyWithMessageFromStore(),
+      take_screenshot: takeScreenshot(),
+    };
+  }
+
+  public setTelegramApiService(telegramApiService: any) {
+    this.telegramApiService = telegramApiService;
+    this.initProcessors(); // Переинициализируем процессоры с новым сервисом
+  }
   public addBlockedResource(resource: EResourceType) {
     if (!this.blockedResources.includes(resource)) {
       this.blockedResources.push(resource);
@@ -36,12 +57,6 @@ export class TaskProcessors {
   public removeBlockedResource(resource: EResourceType) {
     this.blockedResources = this.blockedResources.filter((r) => r !== resource);
   }
-  private processors: taskProcessorsType = {
-    find_on_page_elements: findOnPageElements(),
-    open_browser_tab: openBrowserTab(),
-    notify_with_message_from_store: notifyWithMessageFromStore(),
-    take_screenshot: takeScreenshot(),
-  };
 
   public getProcessor(
     type: keyof typeof ExeTypes
@@ -53,9 +68,7 @@ export class TaskProcessors {
     this.browser = browser;
   }
 
-  public isResourceBlocked(
-    resource: EResourceType
-  ): boolean {
+  public isResourceBlocked(resource: EResourceType): boolean {
     return this.blockedResources.includes(resource);
   }
 }

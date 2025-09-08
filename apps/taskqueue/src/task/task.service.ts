@@ -106,13 +106,45 @@ export class TaskService implements ITaskService {
     id: number,
     updateTaskDto: UpdateTaskDto
   ) => {
-    // Convert string exeType to enum if needed
-    const updateData = { ...updateTaskDto };
-    if (updateData.exeType && typeof updateData.exeType === 'string') {
-      // Convert string to the appropriate enum value
-      updateData.exeType = updateData.exeType as any;
+    // Загружаем существующую задачу с отношениями
+    const existingTask = await this.taskRepository.findOne({
+      where: { id },
+      relations: ['queueEntities'],
+    });
+    
+    if (!existingTask) {
+      throw new Error(`Task with id ${id} not found`);
     }
-    return await this.taskRepository.update(id, updateData as any);
+
+    // Обновляем основные поля
+    if (updateTaskDto.name !== undefined) {
+      existingTask.name = updateTaskDto.name;
+    }
+    if (updateTaskDto.payload !== undefined) {
+      existingTask.payload = updateTaskDto.payload;
+    }
+    if (updateTaskDto.exeType !== undefined) {
+      existingTask.exeType = updateTaskDto.exeType as keyof typeof ExeTypes;
+    }
+    if (updateTaskDto.dependencies !== undefined) {
+      existingTask.dependencies = updateTaskDto.dependencies;
+    }
+
+    // Обновляем связи с очередями, если они переданы
+    if (updateTaskDto.queues !== undefined) {
+      if (updateTaskDto.queues.length > 0) {
+        const queueRepo = this.taskRepository.manager.getRepository(QueueEntity);
+        const queues = await queueRepo.findBy({ id: In(updateTaskDto.queues) });
+        existingTask.queueEntities = queues;
+      } else {
+        // Если передан пустой массив, убираем все связи
+        existingTask.queueEntities = [];
+      }
+    }
+
+    // Сохраняем обновленную задачу
+    const savedTask = await this.taskRepository.save(existingTask);
+    return { affected: 1, raw: savedTask, generatedMaps: [] };
   };
 
   remove: ITaskService['remove'] = async (id: number) => {

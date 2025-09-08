@@ -26,7 +26,6 @@ export const ExeTypesPayloadMap = {
   [ExeTypes.take_screenshot]: {
     outputPath: 'C:\\screenshots\\',
     filename: 'screenshot_{timestamp}.png',
-    allScreens: true,
     sendNotification: true, // if true, will add screenshot info to storage.message
   },
 };

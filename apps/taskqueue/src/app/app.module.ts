@@ -9,6 +9,7 @@ import { QueueModule } from '../queue/queue.module';
 import { TaskEntity } from '../task/task.entity';
 import { TaskModule } from '../task/task.module';
 import { DocsModule } from '../docs/docs.module';
+import { ScreenshotCleanupService } from '../services/screenshot-cleanup.service';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -29,6 +30,6 @@ import { AppService } from './app.service';
     DocsModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [AppService, ScreenshotCleanupService],
 })
 export class AppModule {}

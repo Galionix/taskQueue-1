@@ -1,16 +1,14 @@
 import { takeScreenshot } from './take_screenshot.processor';
 import { TaskEntity } from '../../task/task.entity';
 import * as fs from 'fs';
+import { exec } from 'child_process';
 
 // Mock dependencies
 jest.mock('fs');
-jest.mock('screenshot-desktop', () => jest.fn().mockImplementation(() => Promise.resolve(Buffer.from('single screenshot'))));
-
-// Import the mock after setting up the mock
-const screenshot = require('screenshot-desktop');
-screenshot.all = jest.fn();
+jest.mock('child_process');
 
 const mockFs = fs as jest.Mocked<typeof fs>;
+const mockExec = exec as jest.MockedFunction<typeof exec>;
 
 describe('takeScreenshot processor', () => {
   let processor: any;
@@ -107,8 +105,8 @@ describe('takeScreenshot processor', () => {
 
       await processor.execute(mockTask, mockStorage);
 
-      expect(mockFs.existsSync).toHaveBeenCalledWith('C:\\screenshots\\');
-      expect(mockFs.mkdirSync).toHaveBeenCalledWith('C:\\screenshots\\', {
+      expect(mockFs.existsSync).toHaveBeenCalledWith('C:\\screenshots\\task_1_Test_Screenshot_Task');
+      expect(mockFs.mkdirSync).toHaveBeenCalledWith('C:\\screenshots\\task_1_Test_Screenshot_Task', {
         recursive: true,
       });
     });
@@ -138,7 +136,7 @@ describe('takeScreenshot processor', () => {
       await processor.execute(mockTask, mockStorage);
 
       expect(mockStorage.message).toBe(
-        'Previous message\nScreenshots taken: 1 screens saved to C:\\screenshots\\'
+        'Previous message\nScreenshots taken: 1 screens saved to C:\\screenshots\\task_1_Test_Screenshot_Task'
       );
     });
 
