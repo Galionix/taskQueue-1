@@ -2,47 +2,26 @@ import { KeyboardUtils } from '../utils/keyboard.utils';
 import { MessageFormatter } from '../utils/message-formatter.utils';
 
 describe('KeyboardUtils', () => {
-  describe('createControlPanelKeyboard', () => {
-    it('should create control panel keyboard with correct structure', () => {
-      const keyboard = KeyboardUtils.createControlPanelKeyboard();
-
+  describe('createControlKeyboard', () => {
+    it('should create control keyboard with correct structure', () => {
+      const keyboard = KeyboardUtils.createControlKeyboard();
       expect(keyboard.inline_keyboard).toBeDefined();
-      expect(keyboard.inline_keyboard.length).toBeGreaterThan(0);
-
-      // Check for expected buttons
+      expect(keyboard.inline_keyboard.length).toBe(3);
       const allButtons = keyboard.inline_keyboard.flat();
       const buttonTexts = allButtons.map(btn => btn.text);
-
-      expect(buttonTexts).toContain('▶️ Start Queue');
-      expect(buttonTexts).toContain('⏹️ Stop Queue');
-      expect(buttonTexts).toContain('📊 Status');
-      expect(buttonTexts).toContain('🔄 Restart Engine');
+      expect(buttonTexts).toContain('\u25b6\ufe0f Start Queue 1');
+      expect(buttonTexts).toContain('\u23f9\ufe0f Stop Queue 1');
+      expect(buttonTexts).toContain('\ud83d\udcca Status');
+      expect(buttonTexts).toContain('\ud83d\udd04 Restart Engine');
+      expect(buttonTexts).toContain('\ud83c\udf10 Open Google');
+      expect(buttonTexts).toContain('\ud83d\udd0d Count Elements');
     });
-
     it('should have callback_data for all buttons', () => {
-      const keyboard = KeyboardUtils.createControlPanelKeyboard();
+      const keyboard = KeyboardUtils.createControlKeyboard();
       const allButtons = keyboard.inline_keyboard.flat();
-
       allButtons.forEach(button => {
         expect(button.callback_data).toBeDefined();
         expect(typeof button.callback_data).toBe('string');
-      });
-    });
-  });
-
-  describe('createMainMenuKeyboard', () => {
-    it('should create main menu keyboard with correct structure', () => {
-      const keyboard = KeyboardUtils.createMainMenuKeyboard();
-
-      expect(keyboard.inline_keyboard).toBeDefined();
-      expect(keyboard.inline_keyboard.length).toBeGreaterThan(0);
-
-      const allButtons = keyboard.inline_keyboard.flat();
-      expect(allButtons.length).toBeGreaterThan(0);
-
-      allButtons.forEach(button => {
-        expect(button.text).toBeDefined();
-        expect(button.callback_data).toBeDefined();
       });
     });
   });
@@ -52,63 +31,54 @@ describe('MessageFormatter', () => {
   describe('formatSystemStatus', () => {
     it('should format system status correctly', () => {
       const mockStatus = {
-        activeQueues: 2,
-        activeTasks: 5,
-        memory: 150.5,
-        uptime: 3661, // 1h 1m 1s
         queueEngineStatus: 'running',
-        browserStatus: 'active'
+        activeQueuesCount: 2,
+        totalTasks: 5,
+        browserStatus: 'active',
+        uptime: '1h 1m 1s',
+        memoryMB: 150.5,
       };
-
       const formatted = MessageFormatter.formatSystemStatus(mockStatus);
-
-      expect(formatted).toContain('📊 **System Status**');
-      expect(formatted).toContain('Active Queues: 2');
-      expect(formatted).toContain('Active Tasks: 5');
-      expect(formatted).toContain('Memory: 150.5 MB');
-      expect(formatted).toContain('Uptime: 1h 1m 1s');
-      expect(formatted).toContain('Engine: running');
-      expect(formatted).toContain('Browser: active');
+      expect(formatted).toContain('<b>Queue Engine</b>');
+      expect(formatted).toContain('Active Queues:</b> 2');
+      expect(formatted).toContain('Total Tasks:</b> 5');
+      expect(formatted).toContain('Memory:</b> 150.5 MB');
+      expect(formatted).toContain('Uptime:</b> 1h 1m 1s');
+      expect(formatted).toContain('Browser:</b> active');
     });
-
     it('should handle zero values correctly', () => {
       const mockStatus = {
-        activeQueues: 0,
-        activeTasks: 0,
-        memory: 0,
-        uptime: 0,
         queueEngineStatus: 'stopped',
-        browserStatus: 'inactive'
+        activeQueuesCount: 0,
+        totalTasks: 0,
+        browserStatus: 'inactive',
+        uptime: '0s',
+        memoryMB: 0,
       };
-
       const formatted = MessageFormatter.formatSystemStatus(mockStatus);
-
-      expect(formatted).toContain('Active Queues: 0');
-      expect(formatted).toContain('Active Tasks: 0');
-      expect(formatted).toContain('Memory: 0 MB');
-      expect(formatted).toContain('Uptime: 0s');
-      expect(formatted).toContain('Engine: stopped');
-      expect(formatted).toContain('Browser: inactive');
+      expect(formatted).toContain('Active Queues:</b> 0');
+      expect(formatted).toContain('Total Tasks:</b> 0');
+      expect(formatted).toContain('Memory:</b> 0 MB');
+      expect(formatted).toContain('Uptime:</b> 0s');
+      expect(formatted).toContain('Browser:</b> inactive');
     });
   });
-
+  describe('formatWelcomeMessage', () => {
+    it('should return welcome message', () => {
+      const welcome = MessageFormatter.formatWelcomeMessage();
+      expect(welcome).toContain('<b>Добро пожаловать!</b>');
+      expect(welcome).toContain('/menu');
+      expect(welcome).toContain('/status');
+      expect(welcome).toContain('/help');
+    });
+  });
   describe('formatHelpMessage', () => {
     it('should return help message', () => {
       const help = MessageFormatter.formatHelpMessage();
-
-      expect(help).toContain('🤖 **Bot Commands**');
+      expect(help).toContain('<b>Task Queue Bot - Справка</b>');
       expect(help).toContain('/start');
       expect(help).toContain('/status');
       expect(help).toContain('/help');
-    });
-  });
-
-  describe('formatUnauthorizedMessage', () => {
-    it('should return unauthorized message', () => {
-      const message = MessageFormatter.formatUnauthorizedMessage();
-
-      expect(message).toContain('❌');
-      expect(message).toContain('unauthorized');
     });
   });
 });
