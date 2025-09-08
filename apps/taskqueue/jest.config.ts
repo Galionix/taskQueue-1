@@ -10,12 +10,13 @@ export default {
   coverageDirectory: '../../coverage/apps/taskqueue',
   testMatch: [
     '<rootDir>/src/**/__tests__/**/*.(test|spec).[jt]s?(x)',
-    '<rootDir>/src/**/?(*.)(test|spec).[jt]s?(x)',
+    '<rootDir>/src/**/*.(test|spec).[jt]s?(x)',
   ],
   collectCoverageFrom: [
     'src/**/*.(t|j)s',
     '!src/**/*.spec.ts',
     '!src/**/*.test.ts',
     '!src/**/__tests__/**/*',
+    '!src/main.ts',
   ],
 };
