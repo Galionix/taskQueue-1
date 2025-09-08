@@ -13,8 +13,8 @@ export const EditQueue = ({ q }: { q: QueueModel }) => {
   } = useTasks();
   const [showEdit, setShowEdit] = useState(false);
   const updateQueue = useUpdateQueue();
+  const deleteQueue = useDeleteQueue();
   const [newData, setNewData] = useState<QueueModel>(q);
-  console.log('newData: ', newData);
 
   const updateKey =
     (key: keyof QueueModel) => (value: QueueModel[typeof key]) => {
@@ -24,154 +24,273 @@ export const EditQueue = ({ q }: { q: QueueModel }) => {
       });
     };
 
+  const getStatusIcon = (state: string) => {
+    switch (state) {
+      case '1':
+        return '🟢'; // Active
+      case '0':
+        return '🔴'; // Inactive
+      default:
+        return '⚪'; // Unknown
+    }
+  };
 
-  const deleteQueue = useDeleteQueue();
+  const getStatusText = (state: string) => {
+    switch (state) {
+      case '1':
+        return 'Active';
+      case '0':
+        return 'Inactive';
+      default:
+        return 'Unknown';
+    }
+  };
+
   if (!showEdit)
     return (
-      <div className={s.preview} onClick={() => setShowEdit(true)}>
-        <label>Name:</label>
-        <span>{q.name}</span>
+      <div className={s.preview}>
+        <div className={s.previewHeader}>
+          <h3 className={s.queueName}>{q.name}</h3>
+          <div
+            className={`${s.statusBadge} ${q.state === 0 ? s.inactive : ''}`}
+          >
+            {getStatusIcon(String(q.state))} {getStatusText(String(q.state))}
+          </div>
+        </div>
+
+        <div className={s.previewContent}>
+          <div className={s.infoRow}>
+            <span className={s.infoIcon}>📋</span>
+            <span className={s.infoLabel}>Tasks:</span>
+            <span className={s.tasksCount}>{q.tasks?.length || 0}</span>
+          </div>
+
+          <div className={s.infoRow}>
+            <span className={s.infoIcon}>⏰</span>
+            <span className={s.infoLabel}>Schedule:</span>
+            <span className={s.infoValue}>{q.schedule}</span>
+          </div>
+
+          {q.currentTaskName && (
+            <div className={s.infoRow}>
+              <span className={s.infoIcon}>🎯</span>
+              <span className={s.infoLabel}>Current:</span>
+              <span className={s.infoValue}>{q.currentTaskName}</span>
+            </div>
+          )}
+
+          {/* Quick action buttons */}
+          <div className={s.quickActions} onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => setShowEdit(true)}
+              className={s.quickButton}
+              title="Edit queue"
+            >
+              ✏️ Edit
+            </button>
+            {q.tasks && q.tasks.length > 0 && (
+              <button
+                onClick={() => {
+                  if (confirm(`Remove all tasks from "${q.name}"?`)) {
+                    updateQueue.mutate({
+                      id: q.id,
+                      data: { ...q, tasks: [] },
+                    });
+                  }
+                }}
+                className={s.quickButton}
+                title="Remove all tasks"
+                disabled={updateQueue.isPending}
+              >
+                {updateQueue.isPending ? '⏳' : '🗑️ Clear'}
+              </button>
+            )}
+          </div>
+        </div>
       </div>
     );
+
+  if (isLoadingTasks) {
+    return <div className={s.loadingContainer}>Loading tasks...</div>;
+  }
+
+  if (errorTasks) {
+    return <div className={s.errorContainer}>Error loading tasks</div>;
+  }
+
   return (
-    <div>
-      <button onClick={() => setShowEdit(false)}>x</button>
-      <label>Name</label>
-      <input
-        type="text"
-        value={newData.name}
-        onChange={(e) => updateKey('name')(e.target.value)}
-      />
-      <label>Tasks</label>
-      <ArrangeableSelect
-        options={tasks || []}
-        value={newData.tasks as unknown as number[]}
-        onChange={updateKey('tasks') as (value: number[]) => void}
-      />
-      {/* <select
-        value={newData.tasks as unknown as string[]}
-        multiple={true}
-        onChange={(e) => {
-          const selectedOptions = Array.from(
-            e.target.selectedOptions,
-            (option) => +option.value
-          );
-          updateKey('tasks')(selectedOptions as unknown as QueueModel['tasks']);
-        }}
+    <div className={s.editForm}>
+      <div className={s.editHeader}>
+        <h3 className={s.editTitle}>✏️ Edit Queue</h3>
+        <div className={s.actionButtons}>
+          <button
+            onClick={() => {
+              setShowEdit(false);
+              setNewData(q); // Reset changes
+            }}
+            className={s.closeButton}
+            title="Cancel"
+          >
+            ✕
+          </button>
+        </div>
+      </div>
+
+      <div className={s.formGroup}>
+        <label className={s.formLabel}>Queue Name</label>
+        <input
+          type="text"
+          value={newData.name}
+          onChange={(e) => updateKey('name')(e.target.value)}
+          className={s.formInput}
+          placeholder="Enter queue name"
+        />
+      </div>
+
+      <div className={s.formGroup}>
+        <label className={s.formLabel}>
+          Tasks in Queue (
+          {Array.isArray(newData.tasks) ? newData.tasks.length : 0} tasks)
+        </label>
+        <div className={s.tasksList}>
+          {/* Current tasks in queue */}
+          {Array.isArray(newData.tasks) && newData.tasks.length > 0 && (
+            <div>
+              <div className={s.sectionHeader}>🗂️ Current Tasks in Queue:</div>
+              <div className={s.tasksGrid}>
+                {tasks
+                  ?.filter((task) => newData.tasks.includes(task.id))
+                  .map((task) => (
+                    <label
+                      key={task.id}
+                      className={`${s.taskCheckbox} ${s.checked} ${s.inQueue}`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={true}
+                        onChange={(e) => {
+                          if (!e.target.checked) {
+                            const currentTasks = Array.isArray(newData.tasks)
+                              ? newData.tasks
+                              : [];
+                            updateKey('tasks')(
+                              currentTasks.filter((id) => id !== task.id)
+                            );
+                          }
+                        }}
+                      />
+                      {task.name}
+                    </label>
+                  ))}
+              </div>
+              <div className={s.helpText}>
+                💡 Uncheck tasks to remove them from the queue
+              </div>
+            </div>
+          )}
+
+          {/* Available tasks to add */}
+          <div
+            style={{
+              marginTop:
+                Array.isArray(newData.tasks) && newData.tasks.length > 0
+                  ? '25px'
+                  : '0',
+            }}
+          >
+            <div className={s.sectionHeader}>➕ Available Tasks to Add:</div>
+            <div className={s.tasksGrid}>
+              {tasks
+                ?.filter((task) => !newData.tasks.includes(task.id))
+                .map((task) => (
+                  <label
+                    key={task.id}
+                    className={`${s.taskCheckbox} ${s.available}`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={false}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          const currentTasks = Array.isArray(newData.tasks)
+                            ? newData.tasks
+                            : [];
+                          updateKey('tasks')([...currentTasks, task.id]);
+                        }
+                      }}
+                    />
+                    {task.name}
+                  </label>
+                ))}
+            </div>
+            {tasks?.filter((task) => !newData.tasks.includes(task.id))
+              .length === 0 && (
+              <p
+                style={{
+                  color: '#718096',
+                  fontStyle: 'italic',
+                  textAlign: 'center',
+                  padding: '20px',
+                }}
+              >
+                No more tasks available to add
+              </p>
+            )}
+          </div>
+        </div>
+      </div>
+
+      <div className={s.formGroup}>
+        <label className={s.formLabel}>Schedule (Cron Expression)</label>
+        <input
+          type="text"
+          value={newData.schedule}
+          onChange={(e) => updateKey('schedule')(e.target.value)}
+          className={s.formInput}
+          placeholder="e.g., 0 */5 * * * *"
+        />
+        <small
+          style={{
+            color: '#718096',
+            fontSize: '0.85rem',
+            marginTop: '5px',
+            display: 'block',
+          }}
+        >
+          Every 5 minutes: "0 */5 * * * *" | Every hour: "0 0 * * * *"
+        </small>
+      </div>
+
+      <div
+        className={s.actionButtons}
+        style={{ justifyContent: 'flex-end', gap: '12px', marginTop: '25px' }}
       >
-        {tasks?.map((task) => (
-          <option key={task.id} value={task.id}>
-            {task.name}
-          </option>
-        ))}
-      </select> */}
-      <label>Schedule</label>
-      <input
-        type="text"
-        value={newData.schedule}
-        onChange={(e) => updateKey('schedule')(e.target.value)}
-      />
-      <button
-        onClick={() => {
-          updateQueue.mutate({
-            id: q.id,
-            data: newData,
-          });
-          setShowEdit(false);
-        }}
-      >
-        Update
-      </button>
-      <button onClick={() => deleteQueue.mutate(q.id)}>Delete</button>
+        <button
+          onClick={() => {
+            updateQueue.mutate({
+              id: q.id,
+              data: newData,
+            });
+            setShowEdit(false);
+          }}
+          className={s.saveButton}
+          disabled={updateQueue.isPending}
+        >
+          {updateQueue.isPending ? '⏳ Saving...' : '💾 Save Changes'}
+        </button>
+
+        <button
+          onClick={() => {
+            if (confirm(`Are you sure you want to delete "${q.name}"?`)) {
+              deleteQueue.mutate(q.id);
+            }
+          }}
+          className={s.deleteButton}
+          disabled={deleteQueue.isPending}
+        >
+          {deleteQueue.isPending ? '⏳ Deleting...' : '🗑️ Delete'}
+        </button>
+      </div>
     </div>
   );
 };
-
-// this component is just simple select option with handling arrows up and down to rearrange options
-const ArrangeableSelect = ({
-  options,
-  value,
-  onChange,
-}: {
-  options: { id: number; name: string }[];
-
-  value: number[];
-  onChange: (value: number[]) => void;
-  }) => {
-  const [arrangedOptions, setArrangedOptions] = useState(options);
-  // State to manage the selected options and active index
-  const [selectedOptions, setSelectedOptions] = useState(value);
-  const [activeIndex, setActiveIndex] = useState(0);
-  console.log('activeIndex: ', activeIndex);
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLSelectElement>) => {
-    // handling
-    console.log('e.key: ', e.key);
-    // setSelectedOptions([]);
-    if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      e.stopPropagation();
-      // Move the active index up
-      setArrangedOptions((prev) => {
-        const newOptions = [...prev];
-        const temp = newOptions[activeIndex - 1];
-        newOptions[activeIndex - 1] = newOptions[activeIndex];
-        newOptions[activeIndex] = temp;
-        return newOptions;
-      }
-      );
-      setActiveIndex((prev) => prev - 1);
-    } else if (
-      e.key === 'ArrowDown'
-    ) {
-      e.preventDefault();
-      e.stopPropagation();
-
-      setArrangedOptions((prev) => {
-        const newOptions = [...prev];
-        const temp = newOptions[activeIndex + 1];
-        newOptions[activeIndex + 1] = newOptions[activeIndex];
-        newOptions[activeIndex] = temp;
-        return newOptions;
-      }
-      );
-      setActiveIndex((prev) => prev + 1);
-    }
-  };
-  const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const selected = Array.from(e.target.selectedOptions, (option) => +option.value);
-    setSelectedOptions(selected);
-    onChange(selected);
-  };
-  return (
-    <select
-      multiple={true}
-      value={selectedOptions.map(callbackfn => callbackfn.toString())}
-      size={Math.max(3, options.length)} // Ensure at least 3 visible options
-      onChange={handleChange}
-      onClick={(e) => {
-        console.log('e: ', e.target.value);
-        // Reset active index when clicking on the select
-        const index = options.findIndex(
-          (option) => option.id.toString() === e.target.value
-        );
-        console.log('index: ', index);
-        setActiveIndex(index);
-      }}
-      onKeyDown={handleKeyDown}
-      className={s.arrangeableSelect}
-    >
-      {arrangedOptions.map((option, index) => (
-        <option
-          key={option.id}
-          value={option.id.toString()}
-          className={
-            index === activeIndex ? s.activeOption : s.inactiveOption
-          }
-        >
-          {option.name}
-        </option>
-      ))}
-    </select>
-  );
-}

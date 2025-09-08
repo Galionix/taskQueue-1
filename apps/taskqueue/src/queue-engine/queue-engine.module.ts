@@ -13,5 +13,6 @@ import { QueueEngineService } from './queue-engine.service';
   // No need to import TypeOrmModule here, as QueueEngineService does not use it
   controllers: [QueueEngineController],
   providers: [QueueEngineService, QueueService, TaskService],
+  exports: [QueueEngineService], // Экспортируем сервис для использования в других модулях
 })
 export class QueueEngineModule {}

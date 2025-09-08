@@ -1,120 +1,164 @@
 import { useState } from 'react';
 
 import { useCreateQueue, useTasks } from '@/api/query';
-import { CreateQueueDtoModel, ELockStrategy, ExeTypes } from '@tasks/lib';
+import { CreateQueueDtoModel, ELockStrategy } from '@tasks/lib';
 
 import styles from './createQueue.module.css';
 
-const exeTypesStrings = Object.keys(ExeTypes).filter((maybeKey) =>
-  isNaN(maybeKey as any)
-);
 export const CreateQueue = () => {
+  const createQueue = useCreateQueue();
+  const [shown, setShown] = useState(false);
+  const {
+    data: tasks,
+    isLoading: isLoadingTasks,
+    error: errorTasks,
+  } = useTasks();
 
-  const d = useCreateQueue();
-  const [shown, setShown] = useState(true);
-    const {
-      data: tasks,
-      isLoading: isLoadingTasks,
-      error: errorTasks,
-    } = useTasks();
-    console.log('tasks: ', tasks);
   const [state, setState] = useState<CreateQueueDtoModel>({
-    name: 'queue1',
+    name: '',
     tasks: [],
-    schedule: '0 0/5 * * * ? *',
-    lockStrategy: ELockStrategy.pauseOnLock
+    schedule: '0 */5 * * * *',
+    lockStrategy: ELockStrategy.pauseOnLock,
   });
-  console.log('state: ', state);
 
-  const updateKey =
-    (key: keyof CreateQueueDtoModel) => (value: string) => {
-      setState({
-        ...state,
-        [key]: value,
-      });
-    };
-
-  const toggleArrayEl =
-    (key: keyof CreateQueueDtoModel) => (value: CreateQueueDtoModel["tasks"][0]) => {
-      const existingArray = state[key] as any[];
-      if (existingArray.includes(value)) {
-        setState({
-          ...state,
-          [key]: [...existingArray.filter((el) => el !== value)],
-        });
-      } else {
-        setState({
-          ...state,
-          [key]: [...existingArray, value],
-        });
-      }
-    };
-
-  const addQueue = () => {
-    d.mutate(state);
+  const updateKey = (key: keyof CreateQueueDtoModel) => (value: string) => {
+    setState({
+      ...state,
+      [key]: value,
+    });
   };
 
-  const toggleShown = () => setShown(!shown);
+  const toggleTask = (taskId: number) => {
+    const currentTasks = state.tasks || [];
+    if (currentTasks.includes(taskId)) {
+      setState({
+        ...state,
+        tasks: currentTasks.filter((id) => id !== taskId),
+      });
+    } else {
+      setState({
+        ...state,
+        tasks: [...currentTasks, taskId],
+      });
+    }
+  };
+
+  const addQueue = () => {
+    if (state.name.trim()) {
+      createQueue.mutate(state);
+      setState({
+        name: '',
+        tasks: [],
+        schedule: '0 */5 * * * *',
+        lockStrategy: ELockStrategy.pauseOnLock,
+      });
+      setShown(false);
+    }
+  };
+
+  if (!shown) {
+    return (
+      <div className={styles.createCard} onClick={() => setShown(true)}>
+        <button className={styles.createButton}>➕ Create New Queue</button>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.createQueue}>
       <div className={styles.header}>
-        <h3 onClick={toggleShown}>Create Queue</h3>
-        {shown && <button onClick={toggleShown}>x</button>}
+        <h3>✨ Create Queue</h3>
+        <button onClick={() => setShown(false)} className={styles.closeButton}>
+          ✕
+        </button>
       </div>
-      {shown && (
-        <>
-          <span>Queue name</span>
 
+      <div className={styles.form}>
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}>Queue Name</label>
           <input
             type="text"
             onChange={(e) => updateKey('name')(e.target.value)}
             value={state.name}
+            className={styles.formInput}
+            placeholder="Enter queue name"
           />
-          <span>Exe type</span>
+        </div>
 
-
-          <span>Tasks</span>
-          <select
-            value={state.tasks as unknown as string[]}
-            multiple={true}
-            // eslint-disable-next-line @typescript-eslint/no-empty-function
-            onChange={(e) => {}}
-          >
-            {tasks
-              .filter((el) => !el.queue)
-              .map((key) => (
-                <option
-                  key={key.id}
-                  value={key.id}
-                  // selected={state.tasks.includes(key.id)}
-                  onClick={(e) => toggleArrayEl('tasks')(key.id)}
-                >
-                  {key.name}
-                </option>
-              ))}
-          </select>
-          <span>Schedule</span>
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}>Schedule (Cron Expression)</label>
           <input
             type="text"
             onChange={(e) => updateKey('schedule')(e.target.value)}
             value={state.schedule}
+            className={styles.formInput}
+            placeholder="e.g., 0 */5 * * * *"
           />
-          {/* <span>Lock strategy</span>
-          <select
-            value={state.lockStrategy}
-            onChange={(e) =>
-              updateKey('lockStrategy')(e.target.value as ELockStrategy)
-            }
-          >
-            {Object.keys(ELockStrategy).map((key) => (
-              <option key={key} value={key}>
-                {key}
-              </option>
-            ))}
-          </select> */}
-          <button onClick={addQueue}>Add Queue</button>
-        </>
-      )}
+          <small style={{ color: '#718096', fontSize: '0.85rem' }}>
+            Every 5 minutes: "0 */5 * * * *" | Every hour: "0 0 * * * *"
+          </small>
+        </div>
+
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}>
+            Tasks ({state.tasks?.length || 0} selected)
+          </label>
+          {isLoadingTasks ? (
+            <p style={{ color: '#718096', fontStyle: 'italic' }}>
+              Loading tasks...
+            </p>
+          ) : errorTasks ? (
+            <p style={{ color: '#e53e3e', fontStyle: 'italic' }}>
+              Error loading tasks
+            </p>
+          ) : (
+            <div className={styles.tasksList}>
+              <div className={styles.tasksGrid}>
+                {tasks
+                  ?.filter((task) => !task.queue) // Only show tasks without queue
+                  ?.map((task) => {
+                    const isSelected = state.tasks?.includes(task.id);
+                    return (
+                      <label
+                        key={task.id}
+                        className={`${styles.taskCheckbox} ${
+                          isSelected ? styles.checked : ''
+                        }`}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={isSelected}
+                          onChange={() => toggleTask(task.id)}
+                        />
+                        {task.name}
+                      </label>
+                    );
+                  })}
+              </div>
+              {tasks?.filter((task) => !task.queue).length === 0 && (
+                <p
+                  style={{
+                    color: '#718096',
+                    fontStyle: 'italic',
+                    textAlign: 'center',
+                    padding: '20px',
+                  }}
+                >
+                  No available tasks to add to queue
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+
+        <button
+          onClick={addQueue}
+          className={styles.submitButton}
+          disabled={createQueue.isPending || !state.name.trim()}
+        >
+          {createQueue.isPending ? '⏳ Creating...' : '🚀 Create Queue'}
+        </button>
+      </div>
     </div>
   );
 };

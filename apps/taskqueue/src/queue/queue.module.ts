@@ -11,7 +11,7 @@ import { QueueService } from './queue.service';
   imports: [TypeOrmModule.forFeature([TaskEntity, QueueEntity])],
   controllers: [QueueController],
   providers: [QueueService, TaskService],
-  exports: [QueueService],
+  exports: [QueueService, TaskService],
   // Exporting TaskService to allow QueueService to use it
   // This is necessary for the QueueService to set queues to tasks
 })

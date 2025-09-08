@@ -29,79 +29,117 @@ export function Index() {
     hasQueue: true,
   });
   const d = useDeleteTask();
+
   if (errorTasks)
     return (
-      <div>
-        No tasks found. But error we did!
-        <pre>{JSON.stringify(errorTasks, null, 2)}</pre>
+      <div className={styles.errorContainer}>
+        <div className={styles.errorCard}>
+          <h2>❌ Error Loading Tasks</h2>
+          <details className={styles.errorDetails}>
+            <summary>Show details</summary>
+            <pre>{JSON.stringify(errorTasks, null, 2)}</pre>
+          </details>
+        </div>
       </div>
     );
+
   if (errorQueues)
     return (
-      <div>
-        No queues found. But error we did!
-        <pre>{JSON.stringify(errorQueues, null, 2)}</pre>
+      <div className={styles.errorContainer}>
+        <div className={styles.errorCard}>
+          <h2>❌ Error Loading Queues</h2>
+          <details className={styles.errorDetails}>
+            <summary>Show details</summary>
+            <pre>{JSON.stringify(errorQueues, null, 2)}</pre>
+          </details>
+        </div>
       </div>
     );
-  if (isLoadingTasks) return <div>Loading tasks...</div>;
-  if (isLoadingQueues) return <div>Loading queues...</div>;
+
+  if (isLoadingTasks || isLoadingQueues)
+    return (
+      <div className={styles.loadingContainer}>
+        <div className={styles.spinner}></div>
+        <p>Loading...</p>
+      </div>
+    );
+
   return (
     <div className={styles.page}>
-      <button onClick={restartEngine}>Restart Queue Engine</button>
-      <h1>Queues: {queues.length}</h1>
+      {/* Header */}
+      <header className={styles.header}>
+        <div className={styles.headerContent}>
+          <h1 className={styles.title}>🎯 Task Queue Dashboard</h1>
+          <button
+            onClick={restartEngine}
+            className={styles.restartButton}
+            disabled={restartQueueEngine.isPending}
+          >
+            {restartQueueEngine.isPending ? '⏳' : '🔄'} Restart Engine
+          </button>
+        </div>
+      </header>
 
-      <ul>
-        {queues.map((t) => (
-          <li key={t.id}>
-            <EditQueue q={t} />
-            {/* <span>{`Name:  ${t.name}`}</span> */}
-            {/* <button onClick={() => d.mutate(t.id)}>x</button> */}
-          </li>
-        ))}
-      </ul>
-      <CreateQueue />
-      <h1>Tasks: {tasks.length}</h1>
-      <select
-        value={Object.entries(taskFilter)
-          .filter(([_, val]) => val)
-          .map(([k, v]) => k)}
-        multiple={true}
-        // eslint-disable-next-line @typescript-eslint/no-empty-function
-        onChange={(e) => {}}
-      >
-        {Object.entries(taskFilter)
-          // .filter((el) => el !== state.exeType)
-          .map((key) => (
-            <option
-              key={key[0]}
-              onClick={(e) =>
-                setTaskFilter({
-                  ...taskFilter,
-                  [key[0]]: !key[1],
-                })
-              }
-            >
-              {key}
-            </option>
-          ))}
-      </select>
-      <ul>
-        {tasks
-          .filter((task) => {
-            if (taskFilter.hasQueue) {
-              return task.queue;
-            }
-            return true;
-          })
-          .map((t) => (
-            <li key={t.id}>
-              <EditTask task={t} />
-              {/* <span>{`Name:  ${t.name}`}</span>
-              <button onClick={() => d.mutate(t.id)}>x</button> */}
-            </li>
-          ))}
-      </ul>
-      <CreateTask />
+      <div className={styles.container}>
+        {/* Queues Section */}
+        <section className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <h2 className={styles.sectionTitle}>📋 Queues ({queues.length})</h2>
+          </div>
+
+          <div className={styles.cardsGrid}>
+            {queues.map((queue) => (
+              <div key={queue.id} className={styles.card}>
+                <EditQueue q={queue} />
+              </div>
+            ))}
+            <div className={styles.card + ' ' + styles.createCard}>
+              <CreateQueue />
+            </div>
+          </div>
+        </section>
+
+        {/* Tasks Section */}
+        <section className={styles.section}>
+          <div className={styles.sectionHeader}>
+            <h2 className={styles.sectionTitle}>⚙️ Tasks ({tasks.length})</h2>
+
+            <div className={styles.filterContainer}>
+              <label className={styles.filterLabel}>Filter:</label>
+              <select
+                className={styles.filterSelect}
+                value={taskFilter.hasQueue ? 'hasQueue' : 'all'}
+                onChange={(e) =>
+                  setTaskFilter({
+                    hasQueue: e.target.value === 'hasQueue',
+                  })
+                }
+              >
+                <option value="all">All Tasks</option>
+                <option value="hasQueue">Tasks with Queue</option>
+              </select>
+            </div>
+          </div>
+
+          <div className={styles.cardsGrid}>
+            {tasks
+              .filter((task) => {
+                if (taskFilter.hasQueue) {
+                  return task.queue;
+                }
+                return true;
+              })
+              .map((task) => (
+                <div key={task.id} className={styles.card}>
+                  <EditTask task={task} />
+                </div>
+              ))}
+            <div className={styles.card + ' ' + styles.createCard}>
+              <CreateTask />
+            </div>
+          </div>
+        </section>
+      </div>
     </div>
   );
 }

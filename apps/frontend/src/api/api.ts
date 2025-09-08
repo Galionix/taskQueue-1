@@ -41,6 +41,25 @@ export const taskService: Omit<ITaskService, 'taskRepository'> = {
     >('/task/' + id);
     return response.data;
   },
+  //setQueueToTasks, removeQueueFromTasks, findByIds
+  setQueueToTasks: async (taskIds, id) => {
+    const response = await axiosInstance.post<
+      ReturnType<ITaskService['setQueueToTasks']>
+    >('/task/set-queue/' + id, { taskIds });
+    return response.data;
+  },
+  removeQueueFromTasks: async (taskIds) => {
+    const response = await axiosInstance.post<
+      ReturnType<ITaskService['removeQueueFromTasks']>
+    >('/task/remove-queue', { taskIds });
+    return response.data;
+  },
+  findByIds: async (ids) => {
+    const response = await axiosInstance.post<
+      ReturnType<ITaskService['findByIds']>
+    >('/task/find-by-ids', { ids });
+    return response.data;
+  },
 };
 
 export const queueService: Omit<IQueueService, 'queueRepository'> = {

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-import { useCreateTask } from '@/api/query';
+import { useCreateTask, useTasks } from '@/api/query';
 import { CreateTaskDtoModel, ExeTypes, ExeTypesPayloadMap } from '@tasks/lib';
 
 import styles from './createTask.module.css';
@@ -8,14 +8,16 @@ import styles from './createTask.module.css';
 const exeTypesStrings = Object.keys(ExeTypes).filter((maybeKey) =>
   isNaN(maybeKey as any)
 );
+
 export const CreateTask = () => {
-  const d = useCreateTask();
+  const createTask = useCreateTask();
+  const { data: allTasks } = useTasks();
   const [shown, setShown] = useState(false);
 
   const [state, setState] = useState<CreateTaskDtoModel>({
     dependencies: [],
     exeType: exeTypesStrings[0],
-    name: 'Task Name',
+    name: '',
     payload: JSON.stringify(ExeTypesPayloadMap[0], null, 2),
   });
 
@@ -27,23 +29,22 @@ export const CreateTask = () => {
       });
     };
 
-  const toggleArrayEl =
-    (key: keyof CreateTaskDtoModel) => (value: string | ExeTypes[]) => {
-      const existingArray = state[key] as any[];
-      if (existingArray.includes(value)) {
-        setState({
-          ...state,
-          [key]: [...existingArray.filter((el) => el !== value)],
-        });
-      } else {
-        setState({
-          ...state,
-          [key]: [...existingArray, value],
-        });
-      }
-    };
+  const toggleDependency = (taskId: number) => {
+    const currentDeps = state.dependencies || [];
+    if (currentDeps.includes(taskId)) {
+      setState({
+        ...state,
+        dependencies: currentDeps.filter((id) => id !== taskId),
+      });
+    } else {
+      setState({
+        ...state,
+        dependencies: [...currentDeps, taskId],
+      });
+    }
+  };
 
-  const upadateExeType = (newType) => {
+  const updateExeType = (newType: string) => {
     setState({
       ...state,
       exeType: newType,
@@ -54,67 +55,124 @@ export const CreateTask = () => {
       ),
     });
   };
+
   const addTask = () => {
-    d.mutate(state);
+    if (state.name.trim()) {
+      createTask.mutate(state);
+      setState({
+        dependencies: [],
+        exeType: exeTypesStrings[0],
+        name: '',
+        payload: JSON.stringify(ExeTypesPayloadMap[0], null, 2),
+      });
+      setShown(false);
+    }
   };
 
-  const toggleShown = () => setShown(!shown);
+  if (!shown) {
+    return (
+      <div className={styles.createCard} onClick={() => setShown(true)}>
+        <button className={styles.createButton}>➕ Create New Task</button>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.createTask}>
       <div className={styles.header}>
-        <h3 onClick={toggleShown}>Create Task</h3>
-        {shown && <button onClick={toggleShown}>x</button>}
+        <h3>✨ Create Task</h3>
+        <button onClick={() => setShown(false)} className={styles.closeButton}>
+          ✕
+        </button>
       </div>
-      {shown && (
-        <>
-          <span>Task name</span>
 
+      <div className={styles.form}>
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}>Task Name</label>
           <input
             type="text"
             onChange={(e) => updateKey('name')(e.target.value)}
             value={state.name}
+            className={styles.formInput}
+            placeholder="Enter task name"
           />
-          <span>Exe type</span>
+        </div>
 
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}>Execution Type</label>
           <select
-            onChange={(e) => upadateExeType(e.target.value)}
+            onChange={(e) => updateExeType(e.target.value)}
             value={state.exeType}
+            className={styles.formSelect}
           >
-            {exeTypesStrings.map((key, i) => (
+            {exeTypesStrings.map((key) => (
               <option key={key} value={key}>
-                {key}
+                {key
+                  .replace(/([A-Z])/g, ' $1')
+                  .replace(/^./, (str) => str.toUpperCase())}
               </option>
             ))}
           </select>
-          <span>Dependencies</span>
-          <select
-            value={state.dependencies as unknown as string[]}
-            multiple={true}
-            // eslint-disable-next-line @typescript-eslint/no-empty-function
-            onChange={(e) => {}}
-          >
-            {exeTypesStrings
-              .filter((el) => el !== state.exeType)
-              .map((key) => (
-                <option
-                  key={key}
-                  onClick={(e) => toggleArrayEl('dependencies')(key)}
-                >
-                  {key}
-                </option>
-              ))}
-          </select>
-          <span>Payload</span>
+        </div>
 
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}>Payload (JSON)</label>
           <textarea
-            cols={40}
-            rows={6}
             onChange={(e) => updateKey('payload')(e.target.value)}
             value={state.payload}
+            className={styles.formTextarea}
+            placeholder="Enter JSON payload"
           />
-          <button onClick={addTask}>Add Task</button>
-        </>
-      )}
+        </div>
+
+        <div className={styles.formGroup}>
+          <label className={styles.formLabel}>
+            Dependencies ({state.dependencies?.length || 0} selected)
+          </label>
+          <div className={styles.dependenciesList}>
+            <div className={styles.dependenciesGrid}>
+              {allTasks?.map((task) => {
+                const isSelected = state.dependencies?.includes(task.id);
+                return (
+                  <label
+                    key={task.id}
+                    className={`${styles.dependencyCheckbox} ${
+                      isSelected ? styles.checked : ''
+                    }`}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={isSelected}
+                      onChange={() => toggleDependency(task.id)}
+                    />
+                    {task.name}
+                  </label>
+                );
+              })}
+            </div>
+            {(!allTasks || allTasks.length === 0) && (
+              <p
+                style={{
+                  color: '#718096',
+                  fontStyle: 'italic',
+                  textAlign: 'center',
+                  padding: '20px',
+                }}
+              >
+                No existing tasks to depend on
+              </p>
+            )}
+          </div>
+        </div>
+
+        <button
+          onClick={addTask}
+          className={styles.submitButton}
+          disabled={createTask.isPending || !state.name.trim()}
+        >
+          {createTask.isPending ? '⏳ Creating...' : '🚀 Create Task'}
+        </button>
+      </div>
     </div>
   );
 };

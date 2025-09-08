@@ -43,6 +43,15 @@
           }
         }
       },
+      "test": {
+        "executor": "@nx/jest:jest",
+        "outputs": [
+          "{workspaceRoot}/coverage/{projectRoot}"
+        ],
+        "options": {
+          "jestConfig": "apps/taskqueue/jest.config.ts"
+        }
+      },
       "docker-build": {
         "dependsOn": [
           "build"

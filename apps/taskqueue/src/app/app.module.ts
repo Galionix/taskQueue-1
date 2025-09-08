@@ -1,6 +1,8 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
+import { PushoverModule } from '../pushover/pushover.module';
+import { TelegramModule } from '../telegram/telegram.module';
 import { QueueEngineModule } from '../queue-engine/queue-engine.module';
 import { QueueEntity } from '../queue/queue.entity';
 import { QueueModule } from '../queue/queue.module';
@@ -21,6 +23,8 @@ import { AppService } from './app.service';
     TaskModule,
     QueueModule,
     QueueEngineModule,
+    PushoverModule,
+    TelegramModule,
   ],
   controllers: [AppController],
   providers: [AppService],
