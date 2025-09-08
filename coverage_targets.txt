@@ -1,0 +1,28 @@
+Coverage run: npx nx test taskqueue --coverage
+Date: 2025-09-08
+Overall coverage: 23.77%
+
+Prioritized files to add unit tests for (start from top, do not run tests until all tests are written):
+
+1) apps/taskqueue/src/pushover/pushover.service.ts            (low coverage, ~11%)
+2) apps/taskqueue/src/docs/docs.service.ts                    (very low, large)
+3) apps/taskqueue/src/queue-engine/taskProcessors/send_screenshots_to_telegram.processor.ts (0%)
+4) apps/taskqueue/src/queue-engine/taskProcessors/take_screenshot_new.processor.ts         (0%)
+5) apps/taskqueue/src/queue-engine/taskProcessors/find_on_page_elements.processor.ts       (low)
+6) apps/taskqueue/src/queue-engine/taskProcessors/utils/browser.utils.ts                  (very low)
+7) apps/taskqueue/src/services/screenshot-cleanup.service.ts                             (0%)
+8) apps/taskqueue/src/pushover/pushover.module.ts                                        (module, 0%)
+9) apps/taskqueue/src/telegram/telegram-api.service.ts                                  (0%)
+10) apps/taskqueue/src/telegram/telegram.controller.ts                                   (0%)
+11) apps/taskqueue/src/telegram/telegram.service.ts                                      (0%)
+12) apps/taskqueue/src/telegram/controllers/telegram.controller.ts                      (0%)
+13) apps/taskqueue/src/queue-engine/queue-engine.service.ts                             (low)
+14) apps/taskqueue/src/task/task.service.ts                                              (low)
+15) apps/taskqueue/src/docs/docs.module.ts                                               (module, 0%)
+
+Notes:
+- Focus first on small services and processors that are pure functions or contain try/catch logging (easier to unit test).
+- For modules (files with only @Module), simple import tests may increase stmt coverage but give little value; add them last.
+- After all spec files are added, run: npx nx test taskqueue --coverage and iterate.
+
+End of list.
