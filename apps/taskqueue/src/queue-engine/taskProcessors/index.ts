@@ -4,7 +4,6 @@ import { ExeTypes, TaskModel } from '@tasks/lib';
 
 import { findOnPageElements } from './find_on_page_elements.processor';
 import { notifyWithMessageFromStore } from './notify_with_message_from_store.processor';
-import { openBrowserTab } from './open_browser_tab.processor';
 import { takeScreenshot } from './take_screenshot.processor';
 
 export enum EResourceType {
@@ -19,10 +18,6 @@ export type taskProcessorType = {
 export type taskProcessorsType = {
   [key in keyof typeof ExeTypes]: taskProcessorType;
 };
-// export const taskProcessors: taskProcessorsType = {
-//   find_on_page_elements: findOnPageElements(),
-//   open_browser_tab: openBrowserTab(),
-// };
 
 export class TaskProcessors {
   public browser: Browser | null = null;
@@ -38,7 +33,6 @@ export class TaskProcessors {
   private initProcessors() {
     this.processors = {
       find_on_page_elements: findOnPageElements(),
-      open_browser_tab: openBrowserTab(),
       notify_with_message_from_store: notifyWithMessageFromStore(),
       take_screenshot: takeScreenshot(),
     };

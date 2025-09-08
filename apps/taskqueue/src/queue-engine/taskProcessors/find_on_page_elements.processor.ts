@@ -1,6 +1,7 @@
 import { ExeTypes, ExeTypesPayloadMap, TaskModel } from '@tasks/lib';
 
 import { EResourceType, taskProcessors, taskProcessorType } from './';
+import { openOrFocusTab } from './utils/browser.utils';
 
 const payloadType = ExeTypesPayloadMap[ExeTypes.find_on_page_elements];
 
@@ -22,22 +23,19 @@ export const findOnPageElements = (): taskProcessorType => {
       const pages = await browser.pages();
       let currentPage = pages.find((page) => page.url() === payload.url);
       if (!currentPage) {
-        // taskProcessors.removeBlockedResource(EResourceType.browser);
-        // throw new Error(`No open tab found with URL: ${payload.url}`);
-        const openTabProcessor =
-          taskProcessors.getProcessor('open_browser_tab');
-        if (!openTabProcessor) {
+        // No tab with the URL found, open or focus the tab
+        try {
+          currentPage = await openOrFocusTab(browser, payload.url);
+          if (!currentPage) {
+            taskProcessors.removeBlockedResource(EResourceType.browser);
+            throw new Error('Failed to open or find the page');
+          }
+        } catch (error) {
           taskProcessors.removeBlockedResource(EResourceType.browser);
-          throw new Error('Open Browser Tab processor not found');
+          throw new Error(`Failed to open tab with URL ${payload.url}: ${error}`);
         }
-        const openResult = await openTabProcessor.execute(data, storage);
-        currentPage = openResult.data.page;
-        if (!currentPage) {
-          taskProcessors.removeBlockedResource(EResourceType.browser);
-          throw new Error('Failed to open or find the page');
-        }
-        // refresh the page to ensure we have the latest content
       } else {
+        // Tab already exists, reload it to ensure we have the latest content
         await currentPage.reload();
       }
       await currentPage.bringToFront();

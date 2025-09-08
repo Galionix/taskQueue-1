@@ -1,6 +1,5 @@
 export enum ExeTypes {
   'find_on_page_elements',
-  'open_browser_tab',
   'notify_with_message_from_store',
   'take_screenshot',
 }
@@ -11,9 +10,6 @@ export const ExeTypesPayloadMap = {
     url: 'google.com',
     queryToCount: '#ai-helper-widget',
     extractText: true, // if true, will extract text from the element
-  },
-  [ExeTypes.open_browser_tab]: {
-    url: 'google.com',
   },
   [ExeTypes.notify_with_message_from_store]: {
     device: 'pocof6pro',

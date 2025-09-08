@@ -120,7 +120,7 @@ export const EditTask = ({ task }: { task: TaskModel }) => {
           value={newData.exeType}
           onChange={(e) => updateKey('exeType')(e.target.value)}
           className={s.formInput}
-          placeholder="e.g., open_browser_tab"
+          placeholder="e.g., find_on_page_elements"
         />
       </div>
 
