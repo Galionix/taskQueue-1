@@ -1,11 +1,19 @@
-import { PickType } from '@nestjs/swagger';
-import { CreateTaskDtoModel } from '@tasks/lib';
+import { ApiProperty } from '@nestjs/swagger';
+import { CreateTaskDtoModel, ExeTypes } from '@tasks/lib';
 
-import { TaskEntity } from './task.entity';
+export class CreateTaskDto implements CreateTaskDtoModel {
+  @ApiProperty()
+  name!: string;
 
-export class CreateTaskDto extends PickType(TaskEntity, [
-  'name',
-  'payload',
-  'exeType',
-  'dependencies',
-] as const) implements CreateTaskDtoModel{}
+  @ApiProperty()
+  payload!: string;
+
+  @ApiProperty({ enum: ExeTypes })
+  exeType!: string;
+
+  @ApiProperty({ type: [Number] })
+  dependencies!: ExeTypes[];
+
+  @ApiProperty({ type: [Number] })
+  queues!: number[];
+}

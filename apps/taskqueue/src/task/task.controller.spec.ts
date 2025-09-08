@@ -57,6 +57,7 @@ describe('TaskController', () => {
         exeType: 'find_on_page_elements',
         payload: '{ "selector": ".test" }',
         dependencies: [],
+        queues: [],
       };
 
       mockTaskService.create.mockResolvedValue(mockTask);
@@ -73,12 +74,15 @@ describe('TaskController', () => {
         exeType: 'find_on_page_elements',
         payload: '{ "selector": ".test" }',
         dependencies: [],
+        queues: [],
       };
 
       const error = new Error('Database error');
       mockTaskService.create.mockRejectedValue(error);
 
-      await expect(controller.create(createTaskDto)).rejects.toThrow('Database error');
+      await expect(controller.create(createTaskDto)).rejects.toThrow(
+        'Database error'
+      );
       expect(service.create).toHaveBeenCalledWith(createTaskDto);
     });
   });

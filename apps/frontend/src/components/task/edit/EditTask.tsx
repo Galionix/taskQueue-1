@@ -55,6 +55,20 @@ export const EditTask = ({ task }: { task: TaskModel }) => {
             </span>
           </div>
 
+          <div className={s.infoRow}>
+            <span className={s.infoIcon}>📋</span>
+            <span className={s.infoLabel}>Queues:</span>
+            <span className={s.infoValue}>
+              {task.queues &&
+              Array.isArray(task.queues) &&
+              task.queues.length > 0
+                ? `${task.queues.length} queue${
+                    task.queues.length > 1 ? 's' : ''
+                  } (${task.queues.join(', ')})`
+                : 'No Queues'}
+            </span>
+          </div>
+
           {task.payload && (
             <div>
               <div className={s.infoRow}>

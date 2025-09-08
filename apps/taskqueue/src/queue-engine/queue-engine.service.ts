@@ -214,18 +214,18 @@ export class QueueEngineService implements OnModuleInit, IQueueEngineService {
   }> {
     const startTime = Date.now();
     const log: string[] = [];
-    
+
     try {
       // Get queue data
       const queues = await this.queueRepository.findAll();
-      const queue = queues.find(q => q.id === queueId);
-      
+      const queue = queues.find((q) => q.id === queueId);
+
       if (!queue) {
         throw new Error(`Queue with ID ${queueId} not found`);
       }
 
       log.push(`Starting execution of queue: ${queue.name} (ID: ${queueId})`);
-      
+
       if (!queue.tasks || queue.tasks.length === 0) {
         log.push('No tasks found in queue');
         return {
@@ -234,25 +234,27 @@ export class QueueEngineService implements OnModuleInit, IQueueEngineService {
           tasksExecuted: 0,
           tasksSuccessful: 0,
           tasksFailed: 0,
-          log
+          log,
         };
       }
 
       // Get task entities
       const unorderedTasks = await this.taskRepository.findByIds(queue.tasks);
-      const tasks = queue.tasks.map((taskId) => {
-        const task = unorderedTasks.find((t) => t.id == taskId);
-        if (!task) {
-          log.push(`Warning: Task with ID ${taskId} not found`);
-        }
-        return task!;
-      }).filter(Boolean);
+      const tasks = queue.tasks
+        .map((taskId) => {
+          const task = unorderedTasks.find((t) => t.id == taskId);
+          if (!task) {
+            log.push(`Warning: Task with ID ${taskId} not found`);
+          }
+          return task!;
+        })
+        .filter(Boolean);
 
       log.push(`Found ${tasks.length} tasks to execute`);
 
       // Create temporary storage for this execution (ensure clean start)
       const storage = { message: '' };
-      
+
       let successfulTasks = 0;
       let failedTasks = 0;
 
@@ -263,17 +265,21 @@ export class QueueEngineService implements OnModuleInit, IQueueEngineService {
           await this.processTask(task, storage);
           successfulTasks++;
           log.push(`✅ Task ${task.name} completed successfully`);
-          
+
           // Add task output from storage to log
           if (storage.message && storage.message.trim()) {
-            const taskMessages = storage.message.trim().split('\n').filter(msg => msg.trim());
-            taskMessages.forEach(msg => log.push(`   ${msg.trim()}`));
+            const taskMessages = storage.message
+              .trim()
+              .split('\n')
+              .filter((msg) => msg.trim());
+            taskMessages.forEach((msg) => log.push(`   ${msg.trim()}`));
             // Clear the storage message for next task
             storage.message = '';
           }
         } catch (error) {
           failedTasks++;
-          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          const errorMessage =
+            error instanceof Error ? error.message : 'Unknown error';
           log.push(`❌ Task ${task.name} failed: ${errorMessage}`);
           Logger.error(`Error processing task ${task.id}:`, error);
           // Clear the storage message even on error
@@ -282,7 +288,9 @@ export class QueueEngineService implements OnModuleInit, IQueueEngineService {
       }
 
       const executionTime = Date.now() - startTime;
-      log.push(`Execution completed. Success: ${successfulTasks}, Failed: ${failedTasks}, Time: ${executionTime}ms`);
+      log.push(
+        `Execution completed. Success: ${successfulTasks}, Failed: ${failedTasks}, Time: ${executionTime}ms`
+      );
 
       return {
         success: failedTasks === 0,
@@ -290,12 +298,12 @@ export class QueueEngineService implements OnModuleInit, IQueueEngineService {
         tasksExecuted: successfulTasks + failedTasks,
         tasksSuccessful: successfulTasks,
         tasksFailed: failedTasks,
-        log
+        log,
       };
-
     } catch (error) {
       const executionTime = Date.now() - startTime;
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       log.push(`Fatal error: ${errorMessage}`);
       Logger.error(`Error executing queue ${queueId}:`, error);
 
@@ -306,7 +314,7 @@ export class QueueEngineService implements OnModuleInit, IQueueEngineService {
         tasksSuccessful: 0,
         tasksFailed: 0,
         log,
-        error: errorMessage
+        error: errorMessage,
       };
     }
   }

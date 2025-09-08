@@ -20,10 +20,10 @@
 export class TelegramQueueService {
   // Получение списка очередей с метаданными
   async getQueuesList(): Promise<QueueListItem[]>
-  
+
   // Одноразовое выполнение очереди с логированием
   async executeQueueOnce(queueId: number): Promise<QueueExecutionResult>
-  
+
   // Получение статуса конкретной очереди
   async getQueueStatus(queueId: number): Promise<string>
 }
@@ -75,18 +75,15 @@ interface DocsViewerProps {
 ### 📚 Типизация и модели
 
 #### Общие типы (lib)
-**Файлы:** 
+**Файлы:**
 - `lib/src/service/queue.service.type.ts`
 - `lib/src/service/task.service.type.ts`
 
-**Модели данных:**
+**Модели данных (ManyToMany):**
 ```typescript
 export class QueueModel {
   id: number;
   name: string;
-  tasks: TaskModel['id'][];  // Массив ID задач
-  state: ETaskState;
-  schedule: string;
   // ... другие поля
 }
 
@@ -96,9 +93,18 @@ export class TaskModel {
   exeType: keyof typeof ExeTypes;
   payload: string;
   dependencies: ExeTypes[];
-  // ... другие поля
+  queues: number[]; // Массив ID очередей (API/фронт)
+}
+
+// Backend entity:
+export class TaskEntity {
+  // ...
+  @ManyToMany(() => QueueEntity, queue => queue.taskEntities)
+  queueEntities!: QueueEntity[]; // Для TypeORM
+  get queues(): number[] { return this.queueEntities?.map(q => q.id) ?? []; }
 }
 ```
+> Связь между задачами и очередями теперь полностью ManyToMany. Старое поле `queue` удалено. Для API всегда используется массив `queues: number[]`, для работы с БД — только `queueEntities`.
 
 #### Telegram-специфичные типы
 ```typescript
@@ -225,7 +231,7 @@ TELEGRAM_ALLOWED_USERS=123456789,987654321
 ## 📊 Результат
 
 ✅ **Полностью функциональная интеграция** между Telegram-ботом и системой очередей
-✅ **Красивый UI** для просмотра документации на фронтенде  
+✅ **Красивый UI** для просмотра документации на фронтенде
 ✅ **Строгая типизация** и architectural best practices
 ✅ **Comprehensive документация** с примерами использования
 ✅ **Готовность к продакшену** с proper error handling и security

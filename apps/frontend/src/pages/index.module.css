@@ -28,6 +28,18 @@
 }
 
 /* Filter */
+.filtersContainer {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.filterGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
 .filterContainer {
   display: flex;
   align-items: center;
@@ -38,6 +50,8 @@
   color: white;
   font-weight: 500;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  font-size: 14px;
+    white-space: nowrap;
 }
 
 .filterSelect {
@@ -48,9 +62,43 @@
   font-size: 14px;
   cursor: pointer;
   transition: all 0.3s ease;
+  min-width: 120px;
+  }
+  
+  .filterInput {
+    background: rgba(255, 255, 255, 0.9);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    min-width: 200px;
 }
 
-.filterSelect:focus {
+.filterInput::placeholder {
+  color: rgba(0, 0, 0, 0.5);
+}
+
+.clearFiltersBtn {
+  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.clearFiltersBtn:hover {
+  background: linear-gradient(135deg, #c0392b 0%, #a93226 100%);
+  transform: translateY(-1px);
+}
+
+.filterSelect:focus,
+.filterInput:focus {
   outline: none;
   border-color: #667eea;
   box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
@@ -210,6 +258,29 @@
     align-items: flex-start;
   }
 
+    .filtersContainer {
+      flex-direction: column;
+      align-items: stretch;
+      width: 100%;
+      gap: 15px;
+    }
+  
+    .filterGroup {
+      flex-direction: column;
+      align-items: stretch;
+      gap: 5px;
+    }
+  
+    .filterInput,
+    .filterSelect {
+      min-width: auto;
+      width: 100%;
+    }
+  
+    .clearFiltersBtn {
+      align-self: center;
+      width: auto;
+    }
   .cardsGrid {
     grid-template-columns: 1fr;
   }

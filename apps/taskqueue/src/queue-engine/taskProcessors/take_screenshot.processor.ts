@@ -17,7 +17,7 @@ export const takeScreenshot = (): taskProcessorType => {
     blocks: [], // Не блокирует ресурсы, так как screenshot-desktop работает независимо
     execute: async (data: TaskEntity, storage) => {
       const payload = JSON.parse(data.payload) as typeof payloadType;
-      
+
       try {
         // Создаем директорию если её нет
         if (!fs.existsSync(payload.outputPath)) {
@@ -32,16 +32,19 @@ export const takeScreenshot = (): taskProcessorType => {
         if (payload.allScreens) {
           // Делаем скриншот всех экранов
           const screenshots = await screenshot.all();
-          
+
           const savedFiles: string[] = [];
-          
+
           for (let i = 0; i < screenshots.length; i++) {
-            const screenFilename = filename.replace('.png', `_screen${i + 1}.png`);
+            const screenFilename = filename.replace(
+              '.png',
+              `_screen${i + 1}.png`
+            );
             const screenPath = path.join(payload.outputPath, screenFilename);
-            
+
             fs.writeFileSync(screenPath, screenshots[i]);
             savedFiles.push(screenPath);
-            
+
             console.log(`Screenshot saved: ${screenPath}`);
           }
 
@@ -54,11 +57,11 @@ export const takeScreenshot = (): taskProcessorType => {
           return {
             success: true,
             message: `Screenshots taken successfully: ${savedFiles.length} screens`,
-            data: { 
+            data: {
               files: savedFiles,
               screensCount: screenshots.length,
-              outputPath: payload.outputPath
-            }
+              outputPath: payload.outputPath,
+            },
           };
         } else {
           // Делаем скриншот основного экрана
@@ -76,16 +79,17 @@ export const takeScreenshot = (): taskProcessorType => {
           return {
             success: true,
             message: 'Screenshot taken successfully',
-            data: { 
+            data: {
               file: fullPath,
               screensCount: 1,
-              outputPath: payload.outputPath
-            }
+              outputPath: payload.outputPath,
+            },
           };
         }
       } catch (error) {
         console.error('Error taking screenshot:', error);
-        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+        const errorMessage =
+          error instanceof Error ? error.message : 'Unknown error';
         throw new Error(`Failed to take screenshot: ${errorMessage}`);
       }
     },

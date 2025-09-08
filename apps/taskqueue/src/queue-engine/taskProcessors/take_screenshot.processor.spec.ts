@@ -20,9 +20,9 @@ describe('takeScreenshot processor', () => {
   beforeEach(() => {
     // Reset all modules
     jest.clearAllMocks();
-    
+
     processor = takeScreenshot();
-    
+
     mockTask = {
       id: 1,
       name: 'Test Screenshot Task',
@@ -34,7 +34,8 @@ describe('takeScreenshot processor', () => {
         sendNotification: true,
       }),
       dependencies: [],
-      queue: null,
+      queues: [], // Массив ID очередей
+      queueEntities: [], // Массив объектов очередей
       createdAt: '2023-01-01T00:00:00.000Z',
       updatedAt: '2023-01-01T00:00:00.000Z',
     } as TaskEntity;
@@ -43,7 +44,7 @@ describe('takeScreenshot processor', () => {
 
     // Reset mocks
     jest.clearAllMocks();
-    
+
     // Setup default mock implementations
     mockFs.existsSync.mockReturnValue(true);
     mockFs.mkdirSync.mockImplementation(() => undefined);
@@ -53,13 +54,18 @@ describe('takeScreenshot processor', () => {
   it('should be defined', () => {
     expect(processor).toBeDefined();
     expect(processor.name).toBe('takeScreenshot');
-    expect(processor.description).toBe('Takes screenshots of all computer screens');
+    expect(processor.description).toBe(
+      'Takes screenshots of all computer screens'
+    );
     expect(processor.blocks).toEqual([]);
   });
 
   describe('execute', () => {
     it('should take screenshots of all screens when allScreens is true', async () => {
-      const mockScreenshots = [Buffer.from('screenshot1'), Buffer.from('screenshot2')];
+      const mockScreenshots = [
+        Buffer.from('screenshot1'),
+        Buffer.from('screenshot2'),
+      ];
       screenshot.all.mockResolvedValue(mockScreenshots);
 
       const result = await processor.execute(mockTask, mockStorage);
@@ -79,7 +85,7 @@ describe('takeScreenshot processor', () => {
         allScreens: false,
         sendNotification: true,
       });
-      
+
       mockTask.payload = singleScreenPayload;
       const mockScreenshotBuffer = Buffer.from('single screenshot');
       screenshot.mockResolvedValue(mockScreenshotBuffer);
@@ -102,7 +108,9 @@ describe('takeScreenshot processor', () => {
       await processor.execute(mockTask, mockStorage);
 
       expect(mockFs.existsSync).toHaveBeenCalledWith('C:\\screenshots\\');
-      expect(mockFs.mkdirSync).toHaveBeenCalledWith('C:\\screenshots\\', { recursive: true });
+      expect(mockFs.mkdirSync).toHaveBeenCalledWith('C:\\screenshots\\', {
+        recursive: true,
+      });
     });
 
     it('should not add notification message when sendNotification is false', async () => {
@@ -112,7 +120,7 @@ describe('takeScreenshot processor', () => {
         allScreens: false,
         sendNotification: false,
       });
-      
+
       mockTask.payload = payloadWithoutNotification;
       const mockScreenshotBuffer = Buffer.from('screenshot');
       screenshot.mockResolvedValue(mockScreenshotBuffer);
@@ -129,20 +137,26 @@ describe('takeScreenshot processor', () => {
 
       await processor.execute(mockTask, mockStorage);
 
-      expect(mockStorage.message).toBe('Previous message\nScreenshots taken: 1 screens saved to C:\\screenshots\\');
+      expect(mockStorage.message).toBe(
+        'Previous message\nScreenshots taken: 1 screens saved to C:\\screenshots\\'
+      );
     });
 
     it('should handle screenshot errors gracefully', async () => {
       const error = new Error('Screenshot failed');
       screenshot.all.mockRejectedValue(error);
 
-      await expect(processor.execute(mockTask, mockStorage)).rejects.toThrow('Failed to take screenshot: Screenshot failed');
+      await expect(processor.execute(mockTask, mockStorage)).rejects.toThrow(
+        'Failed to take screenshot: Screenshot failed'
+      );
     });
 
     it('should handle unknown errors gracefully', async () => {
       screenshot.all.mockRejectedValue('Unknown error');
 
-      await expect(processor.execute(mockTask, mockStorage)).rejects.toThrow('Failed to take screenshot: Unknown error');
+      await expect(processor.execute(mockTask, mockStorage)).rejects.toThrow(
+        'Failed to take screenshot: Unknown error'
+      );
     });
 
     it('should replace {timestamp} placeholder in filename', async () => {
@@ -159,15 +173,21 @@ describe('takeScreenshot processor', () => {
     });
 
     it('should handle multiple screens with proper naming', async () => {
-      const mockScreenshots = [Buffer.from('screen1'), Buffer.from('screen2'), Buffer.from('screen3')];
+      const mockScreenshots = [
+        Buffer.from('screen1'),
+        Buffer.from('screen2'),
+        Buffer.from('screen3'),
+      ];
       screenshot.all.mockResolvedValue(mockScreenshots);
 
       await processor.execute(mockTask, mockStorage);
 
       expect(mockFs.writeFileSync).toHaveBeenCalledTimes(3);
-      
+
       // Check that each file has proper screen numbering
-      const filePaths = mockFs.writeFileSync.mock.calls.map(call => call[0] as string);
+      const filePaths = mockFs.writeFileSync.mock.calls.map(
+        (call) => call[0] as string
+      );
       expect(filePaths[0]).toContain('_screen1.png');
       expect(filePaths[1]).toContain('_screen2.png');
       expect(filePaths[2]).toContain('_screen3.png');

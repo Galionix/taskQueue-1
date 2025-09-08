@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { useDeleteTask, useQueues, useTasks } from '@/api/query';
 import { CreateTask } from '@/components/task/create/CreateTask';
 import { Layout } from '@/components/layout';
+import { ExeTypes } from '@tasks/lib';
 
 import { useRestartQueueEngine } from '../api/engine';
 import { CreateQueue } from '../components/queue/create/CreateQueue';
@@ -27,9 +28,64 @@ export function Index() {
   } = useQueues();
 
   const [taskFilter, setTaskFilter] = useState({
-    hasQueue: true,
+    exeType: 'all',
+    queueStatus: 'all',
+    searchText: '',
   });
   const d = useDeleteTask();
+
+  // Filter logic
+  const filterTasks = (tasksList: any[]) => {
+    console.log(
+      'All tasks:',
+      tasksList.map((t) => ({ id: t.id, name: t.name, queues: t.queues }))
+    );
+
+    const filtered = tasksList.filter((task) => {
+      // Search filter
+      if (
+        taskFilter.searchText &&
+        !task.name.toLowerCase().includes(taskFilter.searchText.toLowerCase())
+      ) {
+        return false;
+      }
+
+      // Execution type filter
+      if (taskFilter.exeType !== 'all' && task.exeType !== taskFilter.exeType) {
+        return false;
+      }
+
+      // Queue status filter
+      if (taskFilter.queueStatus === 'with_queue') {
+        // Проверяем, есть ли у задачи очереди (массив должен быть не пустым)
+        const hasQueues =
+          task.queues && Array.isArray(task.queues) && task.queues.length > 0;
+        if (!hasQueues) {
+          return false;
+        }
+      }
+      if (taskFilter.queueStatus === 'without_queue') {
+        // Проверяем, что у задачи нет очередей (массив пустой или null/undefined)
+        const hasQueues =
+          task.queues && Array.isArray(task.queues) && task.queues.length > 0;
+        if (hasQueues) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+
+    console.log(
+      'Filtered tasks:',
+      filtered.map((t) => ({ id: t.id, name: t.name, queues: t.queues }))
+    );
+    console.log('Current filter:', taskFilter);
+
+    return filtered;
+  };
+
+  const filteredTasks = filterTasks(tasks || []);
 
   if (errorTasks)
     return (
@@ -92,38 +148,99 @@ export function Index() {
         {/* Tasks Section */}
         <section className={styles.section}>
           <div className={styles.sectionHeader}>
-            <h2 className={styles.sectionTitle}>⚙️ Tasks ({tasks.length})</h2>
+            <h2 className={styles.sectionTitle}>
+              ⚙️ Tasks ({filteredTasks.length}/{tasks.length})
+            </h2>
 
-            <div className={styles.filterContainer}>
-              <label className={styles.filterLabel}>Filter:</label>
-              <select
-                className={styles.filterSelect}
-                value={taskFilter.hasQueue ? 'hasQueue' : 'all'}
-                onChange={(e) =>
-                  setTaskFilter({
-                    hasQueue: e.target.value === 'hasQueue',
-                  })
-                }
-              >
-                <option value="all">All Tasks</option>
-                <option value="hasQueue">Tasks with Queue</option>
-              </select>
+            <div className={styles.filtersContainer}>
+              {/* Search Filter */}
+              <div className={styles.filterGroup}>
+                <label className={styles.filterLabel}>🔍 Search:</label>
+                <input
+                  type="text"
+                  className={styles.filterInput}
+                  placeholder="Search by name..."
+                  value={taskFilter.searchText}
+                  onChange={(e) =>
+                    setTaskFilter((prev) => ({
+                      ...prev,
+                      searchText: e.target.value,
+                    }))
+                  }
+                />
+              </div>
+
+              {/* Execution Type Filter */}
+              <div className={styles.filterGroup}>
+                <label className={styles.filterLabel}>⚙️ Type:</label>
+                <select
+                  className={styles.filterSelect}
+                  value={taskFilter.exeType}
+                  onChange={(e) =>
+                    setTaskFilter((prev) => ({
+                      ...prev,
+                      exeType: e.target.value,
+                    }))
+                  }
+                >
+                  <option value="all">All Types</option>
+                  {Object.keys(ExeTypes)
+                    .filter((key) => isNaN(Number(key)))
+                    .map((exeType) => (
+                      <option key={exeType} value={exeType}>
+                        {exeType
+                          .replace(/_/g, ' ')
+                          .replace(/\b\w/g, (l) => l.toUpperCase())}
+                      </option>
+                    ))}
+                </select>
+              </div>
+
+              {/* Queue Status Filter */}
+              <div className={styles.filterGroup}>
+                <label className={styles.filterLabel}>📋 Queue:</label>
+                <select
+                  className={styles.filterSelect}
+                  value={taskFilter.queueStatus}
+                  onChange={(e) =>
+                    setTaskFilter((prev) => ({
+                      ...prev,
+                      queueStatus: e.target.value,
+                    }))
+                  }
+                >
+                  <option value="all">All Tasks</option>
+                  <option value="with_queue">With Queue</option>
+                  <option value="without_queue">Without Queue</option>
+                </select>
+              </div>
+
+              {/* Clear Filters Button */}
+              {(taskFilter.searchText ||
+                taskFilter.exeType !== 'all' ||
+                taskFilter.queueStatus !== 'all') && (
+                <button
+                  className={styles.clearFiltersBtn}
+                  onClick={() =>
+                    setTaskFilter({
+                      exeType: 'all',
+                      queueStatus: 'all',
+                      searchText: '',
+                    })
+                  }
+                >
+                  ✖️ Clear
+                </button>
+              )}
             </div>
           </div>
 
           <div className={styles.cardsGrid}>
-            {tasks
-              .filter((task) => {
-                if (taskFilter.hasQueue) {
-                  return task.queue;
-                }
-                return true;
-              })
-              .map((task) => (
-                <div key={task.id} className={styles.card}>
-                  <EditTask task={task} />
-                </div>
-              ))}
+            {filteredTasks.map((task) => (
+              <div key={task.id} className={styles.card}>
+                <EditTask task={task} />
+              </div>
+            ))}
             <div className={styles.card + ' ' + styles.createCard}>
               <CreateTask />
             </div>

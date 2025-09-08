@@ -82,7 +82,7 @@ export class CommandHandler {
             break;
           }
         }
-        
+
         // Проверяем, не является ли это командой получения статуса очереди
         if (command.startsWith('queue_status_')) {
           const queueIdStr = command.replace('queue_status_', '');
@@ -170,14 +170,14 @@ export class CommandHandler {
 
   private async listQueues(): Promise<CommandResult> {
     this.logger.log('📋 Getting list of all queues');
-    
+
     try {
       if (!this.telegramQueueService) {
         return { success: false, message: 'TelegramQueueService недоступен' };
       }
 
       const queues = await this.telegramQueueService.getQueuesList();
-      
+
       if (queues.length === 0) {
         return { success: true, message: '📋 Очереди не найдены' };
       }
@@ -185,7 +185,7 @@ export class CommandHandler {
       const queueList = queues.map((queue, index) => {
         const activeEmoji = queue.isActive !== undefined ? (queue.isActive ? '🟢' : '🔴') : '⚪';
         const activeText = queue.isActive !== undefined ? (queue.isActive ? 'Активна' : 'Неактивна') : 'Неизвестно';
-        
+
         return `${index + 1}. 📋 ${queue.name} (ID: ${queue.id})\n` +
                `   📊 Статус: ${this.getStateEmoji(queue.state)} ${queue.state}\n` +
                `   ${activeEmoji} Активность: ${activeText}\n` +
@@ -211,18 +211,18 @@ export class CommandHandler {
 
   private async executeQueue(queueId: number): Promise<CommandResult> {
     this.logger.log(`🚀 Executing queue ${queueId} once`);
-    
+
     try {
       if (!this.telegramQueueService) {
         return { success: false, message: 'TelegramQueueService недоступен' };
       }
 
       const result = await this.telegramQueueService.executeQueueOnce(queueId);
-      
+
       // Форматируем лог для Telegram (ограничиваем размер)
       const logPreview = result.log.slice(0, 15).join('\n');
       const isLogTruncated = result.log.length > 15;
-      
+
       const message = [
         `🚀 Выполнение очереди "${result.queueName}" завершено`,
         '',
@@ -248,7 +248,7 @@ export class CommandHandler {
 
   private async getQueueStatus(queueId: number): Promise<CommandResult> {
     this.logger.log(`📊 Getting status for queue ${queueId}`);
-    
+
     try {
       if (!this.telegramQueueService) {
         return { success: false, message: 'TelegramQueueService недоступен' };
@@ -265,7 +265,7 @@ export class CommandHandler {
 
   private async toggleQueueActivity(queueId: number): Promise<CommandResult> {
     this.logger.log(`🔄 Toggling activity for queue ${queueId}`);
-    
+
     try {
       if (!this.telegramQueueService) {
         return { success: false, message: 'TelegramQueueService недоступен' };

@@ -2,12 +2,14 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  ManyToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
 import { ApiProperty } from '@nestjs/swagger';
 import { ELockStrategy, ETaskState, QueueModel, TaskModel } from '@tasks/lib';
+import { forwardRef, Inject } from '@nestjs/common';
 
 // import { type } from '../../../frontend/src/api/types';
 import { TaskEntity } from '../task/task.entity';
@@ -48,7 +50,11 @@ export class QueueEntity extends QueueModel {
 
   @ApiProperty()
   @Column('simple-array', { default: '' })
-  override tasks!: TaskEntity['id'][];
+  override tasks!: TaskModel['id'][];
+
+  // ManyToMany связь с задачами
+  @ManyToMany(() => TaskEntity, (task) => task.queueEntities)
+  taskEntities!: TaskEntity[];
 
   @ApiProperty()
   @Column({

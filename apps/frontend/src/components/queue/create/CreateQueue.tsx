@@ -117,7 +117,7 @@ export const CreateQueue = () => {
             <div className={styles.tasksList}>
               <div className={styles.tasksGrid}>
                 {tasks
-                  ?.filter((task) => !task.queue) // Only show tasks without queue
+                  ?.filter((task) => !task.queues || task.queues.length === 0) // Only show tasks without queues
                   ?.map((task) => {
                     const isSelected = state.tasks?.includes(task.id);
                     return (
@@ -137,7 +137,8 @@ export const CreateQueue = () => {
                     );
                   })}
               </div>
-              {tasks?.filter((task) => !task.queue).length === 0 && (
+              {tasks?.filter((task) => !task.queues || task.queues.length === 0)
+                .length === 0 && (
                 <p
                   style={{
                     color: '#718096',

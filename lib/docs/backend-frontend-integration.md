@@ -101,7 +101,7 @@ export const docsService: IDocsService = {
     const response = await axiosInstance.get<ApiResponse<FileNode>>('/docs/tree');
     return response.data.data; // Извлекаем данные из ApiResponse
   },
-  
+
   readMarkdownFile: async (path) => {
     const response = await axiosInstance.get<ApiResponse<{ content: string }>>(
       `/docs/file/${path}`
@@ -247,6 +247,49 @@ export const useNewFeatures = () => {
   });
 };
 ```
+
+# ⚡ ManyToMany: Tasks & Queues
+
+## Архитектура связи
+
+- Один Task может быть в нескольких Queue (и наоборот).
+- В базе реализовано через TypeORM @ManyToMany между TaskEntity и QueueEntity.
+- Для API и фронта используется только массив ID: `queues: number[]`.
+
+### Пример TaskEntity (backend)
+```typescript
+@ManyToMany(() => QueueEntity, queue => queue.taskEntities, { cascade: true })
+@JoinTable({
+  name: 'task_queues',
+  joinColumn: { name: 'task_id', referencedColumnName: 'id' },
+  inverseJoinColumn: { name: 'queue_id', referencedColumnName: 'id' },
+})
+queueEntities!: QueueEntity[];
+
+// Геттер для API/фронта
+get queues(): number[] {
+  return this.queueEntities ? this.queueEntities.map(q => q.id) : [];
+}
+```
+
+### Пример TaskService (backend)
+```typescript
+// При создании задачи:
+const task = this.taskRepository.create({ ... });
+const saved = await this.taskRepository.save(task);
+if (dto.queues?.length) {
+  const queues = await queueRepo.findBy({ id: In(dto.queues) });
+  saved.queueEntities = queues;
+  await this.taskRepository.save(saved);
+}
+```
+
+### Рекомендации
+- Не используйте поле queue (только queues: number[])
+- Для работы с связями используйте только queueEntities (TypeORM)
+- Для API-ответа используйте геттер queues
+
+---
 
 ## 🔍 Отладка и мониторинг
 

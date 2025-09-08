@@ -27,15 +27,19 @@ export const Header: React.FC<HeaderProps> = ({
         </div>
 
         <nav className={styles.navigation}>
-          <Link 
-            href="/" 
-            className={`${styles.navLink} ${currentPath === '/' ? styles.active : ''}`}
+          <Link
+            href="/"
+            className={`${styles.navLink} ${
+              currentPath === '/' ? styles.active : ''
+            }`}
           >
             🏠 Dashboard
           </Link>
-          <Link 
-            href="/docs" 
-            className={`${styles.navLink} ${currentPath === '/docs' ? styles.active : ''}`}
+          <Link
+            href="/docs"
+            className={`${styles.navLink} ${
+              currentPath === '/docs' ? styles.active : ''
+            }`}
           >
             📚 Documentation
           </Link>

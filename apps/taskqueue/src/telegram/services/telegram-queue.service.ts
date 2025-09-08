@@ -142,7 +142,7 @@ export class TelegramQueueService {
       const stateText = this.getStateText(queue.state);
       const activityEmoji = queue.isActive ? '🟢' : '⚪';
       const activityText = queue.isActive ? 'Активна' : 'Неактивна';
-      
+
       return [
         `🎯 Queue: ${queue.name}`,
         `${stateEmoji} Status: ${stateText}`,
@@ -169,25 +169,27 @@ export class TelegramQueueService {
     message: string;
   }> {
     this.logger.log(`🔄 Toggling activity for queue ${queueId}`);
-    
+
     try {
       const queues = await this.queueService.findAll();
       const targetQueue = queues.find(q => q.id === queueId);
-      
+
       if (!targetQueue) {
         throw new Error(`Queue with ID ${queueId} not found`);
       }
 
       // Переключаем активность через QueueService
       const updatedQueue = await this.queueService.toggleActivity!(queueId);
-      
-      const statusText = updatedQueue.isActive ? 'активирована' : 'деактивирована';
+
+      const statusText = updatedQueue.isActive
+        ? 'активирована'
+        : 'деактивирована';
       const statusEmoji = updatedQueue.isActive ? '🟢' : '⚪';
-      
+
       const message = [
         `${statusEmoji} Очередь "${updatedQueue.name}" ${statusText}`,
         '',
-        updatedQueue.isActive 
+        updatedQueue.isActive
           ? '✅ Очередь будет выполняться по расписанию'
           : '⏸️ Очередь НЕ будет выполняться по расписанию',
         `📋 Ручное выполнение через бота остается доступным`,
@@ -206,7 +208,7 @@ export class TelegramQueueService {
 
     } catch (error: unknown) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      
+
       this.logger.error(`❌ Failed to toggle queue ${queueId} activity:`, error);
 
       return {

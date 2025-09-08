@@ -179,7 +179,7 @@ export enum EResourceType {
 // lib/src/constants/exeTypes.ts
 export enum ExeTypes {
   'find_on_page_elements',
-  'open_browser_tab', 
+  'open_browser_tab',
   'notify_with_message_from_store',
   'take_screenshot',  // <-- новый тип
 }
@@ -214,9 +214,9 @@ export const takeScreenshot = (): taskProcessorType => {
     blocks: [], // Не блокирует ресурсы
     execute: async (data: TaskEntity, storage) => {
       const payload = JSON.parse(data.payload) as typeof payloadType;
-      
+
       // Логика создания скриншота
-      
+
       return {
         success: true,
         message: 'Screenshot taken successfully',

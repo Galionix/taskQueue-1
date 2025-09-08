@@ -11,18 +11,19 @@ export class TaskModel {
     public dependencies: ExeTypes[],
     public createdAt: string,
     public updatedAt: string,
-    public queue: QueueModel['id'] | null
+    public queues: QueueModel['id'][] // Только новый формат: массив ID очередей
   ) {}
 }
-
 export class CreateTaskDtoModel {
   constructor(
     public name: string,
     public exeType: string,
     public payload: string,
-    public dependencies: ExeTypes[]
+    public dependencies: ExeTypes[],
+    public queues: QueueModel['id'][] // Массив ID очередей
   ) {}
 }
+
 export class UpdateTaskDtoModel {
   constructor(
     public id?: number,
@@ -32,7 +33,7 @@ export class UpdateTaskDtoModel {
     public dependencies?: ExeTypes[],
     public createdAt?: string,
     public updatedAt?: string,
-    public queue?: QueueModel['id'] | null
+    public queues?: QueueModel['id'][] // Массив ID очередей
   ) {}
 }
 export interface ITaskService {

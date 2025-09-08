@@ -102,11 +102,15 @@ export class QueueService implements IQueueService {
     if (!queue) {
       throw new Error(`Queue with id ${id} not found`);
     }
-    
+
     queue.isActive = !queue.isActive;
     const updatedQueue = await this.queueRepository.save(queue);
-    
-    Logger.log(`Queue ${id} activity toggled to: ${updatedQueue.isActive ? 'ACTIVE' : 'INACTIVE'}`);
+
+    Logger.log(
+      `Queue ${id} activity toggled to: ${
+        updatedQueue.isActive ? 'ACTIVE' : 'INACTIVE'
+      }`
+    );
     return updatedQueue;
   };
 
@@ -118,11 +122,15 @@ export class QueueService implements IQueueService {
     if (!queue) {
       throw new Error(`Queue with id ${id} not found`);
     }
-    
+
     queue.isActive = isActive;
     const updatedQueue = await this.queueRepository.save(queue);
-    
-    Logger.log(`Queue ${id} activity set to: ${updatedQueue.isActive ? 'ACTIVE' : 'INACTIVE'}`);
+
+    Logger.log(
+      `Queue ${id} activity set to: ${
+        updatedQueue.isActive ? 'ACTIVE' : 'INACTIVE'
+      }`
+    );
     return updatedQueue;
   };
   getTasks = async (id: number) => {

@@ -22,7 +22,7 @@
 
 **Созданы/исправлены тесты:**
 - ✅ `queue.controller.spec.ts` - 100% покрытие
-- ✅ `queue.service.spec.ts` - 100% покрытие  
+- ✅ `queue.service.spec.ts` - 100% покрытие
 - ✅ `task.controller.spec.ts` - 100% покрытие
 - ✅ `take_screenshot.processor.spec.ts` - 100% покрытие (новый)
 
@@ -135,7 +135,7 @@ export enum ExeTypes {
 
 ### Интеграция в очередь для мониторинга:
 1. Создать очередь с расписанием (например, каждые 30 минут)
-2. Добавить задачу `take_screenshot` 
+2. Добавить задачу `take_screenshot`
 3. Добавить задачу `notify_with_message_from_store` для уведомлений
 4. Активировать очередь
 

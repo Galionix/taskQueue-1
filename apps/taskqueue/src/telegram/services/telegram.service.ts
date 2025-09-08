@@ -282,7 +282,7 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
   private async showQueueList(chatId: string): Promise<void> {
     try {
       const queues = await this.telegramQueueService.getQueuesList();
-      
+
       if (queues.length === 0) {
         await this.telegramApiService.sendMessage(
           chatId,
@@ -294,15 +294,18 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
       const message = [
         `📋 Доступные очереди (${queues.length}):`,
         '',
-        ...queues.map((queue, index) => 
-          `${index + 1}. **${queue.name}** (ID: ${queue.id})\n` +
-          `   📊 Статус: ${this.getStateEmojiForService(queue.state)} ${queue.state}\n` +
-          `   🔢 Задач: ${queue.taskCount}\n` +
-          `   ⏰ Расписание: ${queue.schedule}`
+        ...queues.map(
+          (queue, index) =>
+            `${index + 1}. **${queue.name}** (ID: ${queue.id})\n` +
+            `   📊 Статус: ${this.getStateEmojiForService(queue.state)} ${
+              queue.state
+            }\n` +
+            `   🔢 Задач: ${queue.taskCount}\n` +
+            `   ⏰ Расписание: ${queue.schedule}`
         ),
         '',
         '🚀 Нажмите кнопку для запуска очереди',
-        '📊 Или получите детальный статус'
+        '📊 Или получите детальный статус',
       ].join('\n');
 
       // Создаем клавиатуру с кнопками для каждой очереди

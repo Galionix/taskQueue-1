@@ -167,20 +167,20 @@
     flex-direction: column;
     gap: 16px;
   }
-  
+
   .title {
     font-size: 2rem;
   }
-  
+
   .navigation {
     gap: 12px;
   }
-  
+
   .navLink {
     padding: 10px 16px;
     font-size: 14px;
   }
-  
+
   .restartButton {
     padding: 10px 20px;
     font-size: 14px;
@@ -193,7 +193,7 @@
     width: 100%;
     gap: 8px;
   }
-  
+
   .navLink {
     text-align: center;
     width: 100%;

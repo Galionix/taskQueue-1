@@ -66,22 +66,22 @@ export * from './service/notifications.service.type.js';
 #### Controller
 ```typescript
 // apps/taskqueue/src/notifications/notifications.controller.ts
-import { 
-  Controller, 
-  Get, 
-  Post, 
-  Body, 
-  Patch, 
-  Param, 
+import {
+  Controller,
+  Get,
+  Post,
+  Body,
+  Patch,
+  Param,
   Delete,
-  Logger 
+  Logger
 } from '@nestjs/common';
-import { 
+import {
   ApiResponse,
-  Notification, 
-  CreateNotificationDto, 
+  Notification,
+  CreateNotificationDto,
   UpdateNotificationDto,
-  NotificationStats 
+  NotificationStats
 } from '@tasks/lib';
 import { NotificationsService } from './notifications.service';
 
@@ -128,7 +128,7 @@ export class NotificationsController {
 
   @Patch(':id')
   async update(
-    @Param('id') id: string, 
+    @Param('id') id: string,
     @Body() updateDto: UpdateNotificationDto
   ): Promise<ApiResponse<Notification>> {
     this.logger.log(`Updating notification ${id}`);
@@ -156,12 +156,12 @@ export class NotificationsController {
 ```typescript
 // apps/taskqueue/src/notifications/notifications.service.ts
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { 
+import {
   INotificationService,
-  Notification, 
-  CreateNotificationDto, 
+  Notification,
+  CreateNotificationDto,
   UpdateNotificationDto,
-  NotificationStats 
+  NotificationStats
 } from '@tasks/lib';
 
 @Injectable()
@@ -192,7 +192,7 @@ export class NotificationsService implements INotificationService {
       isRead: false,
       createdAt: new Date(),
     };
-    
+
     this.notifications.push(notification);
     return notification;
   }
@@ -220,7 +220,7 @@ export class NotificationsService implements INotificationService {
   async getStats(): Promise<NotificationStats> {
     const total = this.notifications.length;
     const unread = this.notifications.filter(n => !n.isRead).length;
-    
+
     const byType = this.notifications.reduce((acc, notification) => {
       acc[notification.type] = (acc[notification.type] || 0) + 1;
       return acc;
@@ -402,9 +402,9 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({ notification
   const deleteMutation = useDeleteNotification();
 
   const handleMarkAsRead = () => {
-    updateMutation.mutate({ 
-      id: notification.id, 
-      data: { isRead: true } 
+    updateMutation.mutate({
+      id: notification.id,
+      data: { isRead: true }
     });
   };
 
@@ -426,7 +426,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({ notification
       <div className={styles.icon}>
         {getTypeIcon(notification.type)}
       </div>
-      
+
       <div className={styles.content}>
         <h4 className={styles.title}>{notification.title}</h4>
         <p className={styles.message}>{notification.message}</p>
@@ -437,7 +437,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({ notification
 
       <div className={styles.actions}>
         {!notification.isRead && (
-          <button 
+          <button
             onClick={handleMarkAsRead}
             className={styles.markReadBtn}
             disabled={updateMutation.isPending}
@@ -445,7 +445,7 @@ export const NotificationItem: React.FC<NotificationItemProps> = ({ notification
             Mark as Read
           </button>
         )}
-        <button 
+        <button
           onClick={handleDelete}
           className={styles.deleteBtn}
           disabled={deleteMutation.isPending}
@@ -488,7 +488,7 @@ export const NotificationsList: React.FC = () => {
       <div className={styles.header}>
         <h2>Notifications ({notifications.length})</h2>
         {stats && stats.unread > 0 && (
-          <button 
+          <button
             onClick={() => markAllAsReadMutation.mutate()}
             className={styles.markAllBtn}
             disabled={markAllAsReadMutation.isPending}
@@ -500,9 +500,9 @@ export const NotificationsList: React.FC = () => {
 
       <div className={styles.list}>
         {notifications.map(notification => (
-          <NotificationItem 
-            key={notification.id} 
-            notification={notification} 
+          <NotificationItem
+            key={notification.id}
+            notification={notification}
           />
         ))}
       </div>
@@ -521,7 +521,7 @@ export const useMarkAsRead = () => {
   return useMutation({
     mutationFn: ({ id, data }: { id: number; data: UpdateNotificationDto }) =>
       notificationService.update(id, data),
-    
+
     onMutate: async ({ id, data }) => {
       // Отменяем текущие запросы
       await queryClient.cancelQueries({ queryKey: ['notifications'] });
@@ -585,7 +585,7 @@ export const useErrorHandler = () => {
 // Использование в hooks
 export const useNotifications = () => {
   const handleError = useErrorHandler();
-  
+
   return useQuery({
     queryKey: ['notifications'],
     queryFn: notificationService.findAll,

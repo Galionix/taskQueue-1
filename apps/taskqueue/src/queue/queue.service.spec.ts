@@ -45,7 +45,7 @@ describe('QueueService', () => {
 
   beforeEach(async () => {
     jest.clearAllMocks();
-    
+
     const module: TestingModule = await Test.createTestingModule({
       providers: [
         QueueService,
@@ -135,7 +135,9 @@ describe('QueueService', () => {
         lockStrategy: null,
       };
 
-      await expect(service.create(createQueueDto)).rejects.toThrow('Invalid cron expression');
+      await expect(service.create(createQueueDto)).rejects.toThrow(
+        'Invalid cron expression'
+      );
       expect(mockRepository.create).not.toHaveBeenCalled();
       expect(mockRepository.save).not.toHaveBeenCalled();
     });
@@ -152,7 +154,9 @@ describe('QueueService', () => {
       mockRepository.create.mockReturnValue(mockQueue);
       mockRepository.save.mockRejectedValue(new Error('Database error'));
 
-      await expect(service.create(createQueueDto)).rejects.toThrow('Database error');
+      await expect(service.create(createQueueDto)).rejects.toThrow(
+        'Database error'
+      );
     });
   });
 
@@ -177,9 +181,13 @@ describe('QueueService', () => {
     });
 
     it('should handle repository errors during findAll', async () => {
-      mockRepository.find.mockRejectedValue(new Error('Database connection error'));
+      mockRepository.find.mockRejectedValue(
+        new Error('Database connection error')
+      );
 
-      await expect(service.findAll()).rejects.toThrow('Database connection error');
+      await expect(service.findAll()).rejects.toThrow(
+        'Database connection error'
+      );
     });
   });
 
@@ -211,7 +219,10 @@ describe('QueueService', () => {
       const result = await service.update(1, updateQueueDto);
 
       expect(mockRepository.findOneBy).toHaveBeenCalledWith({ id: 1 });
-      expect(mockRepository.merge).toHaveBeenCalledWith(mockQueue, updateQueueDto);
+      expect(mockRepository.merge).toHaveBeenCalledWith(
+        mockQueue,
+        updateQueueDto
+      );
       expect(mockRepository.save).toHaveBeenCalledWith(updatedQueue);
       expect(result).toEqual(updatedQueue);
     });
@@ -233,7 +244,10 @@ describe('QueueService', () => {
       const result = await service.update(1, updateQueueDto);
 
       expect(mockTaskService.removeQueueFromTasks).toHaveBeenCalledWith([1, 2]);
-      expect(mockTaskService.setQueueToTasks).toHaveBeenCalledWith([3, 4, 5], 1);
+      expect(mockTaskService.setQueueToTasks).toHaveBeenCalledWith(
+        [3, 4, 5],
+        1
+      );
       expect(result).toEqual(updatedQueue);
     });
 
@@ -242,7 +256,9 @@ describe('QueueService', () => {
 
       mockRepository.findOneBy.mockResolvedValue(null);
 
-      await expect(service.update(999, updateQueueDto)).rejects.toThrow('Queue with id 999 not found');
+      await expect(service.update(999, updateQueueDto)).rejects.toThrow(
+        'Queue with id 999 not found'
+      );
       expect(mockRepository.merge).not.toHaveBeenCalled();
       expect(mockRepository.save).not.toHaveBeenCalled();
     });
@@ -254,7 +270,9 @@ describe('QueueService', () => {
       mockRepository.merge.mockReturnValue(mockQueue);
       mockRepository.save.mockRejectedValue(new Error('Save failed'));
 
-      await expect(service.update(1, updateQueueDto)).rejects.toThrow('Save failed');
+      await expect(service.update(1, updateQueueDto)).rejects.toThrow(
+        'Save failed'
+      );
     });
   });
 
@@ -273,7 +291,7 @@ describe('QueueService', () => {
 
     it('should remove queue without tasks', async () => {
       const queueWithoutTasks = { ...mockQueue, tasks: null };
-      
+
       mockRepository.findOneBy.mockResolvedValue(queueWithoutTasks);
       mockRepository.delete.mockResolvedValue({ affected: 1, raw: {} });
 
@@ -287,7 +305,9 @@ describe('QueueService', () => {
     it('should throw error when queue not found', async () => {
       mockRepository.findOneBy.mockResolvedValue(null);
 
-      await expect(service.remove(999)).rejects.toThrow('Queue with id 999 not found');
+      await expect(service.remove(999)).rejects.toThrow(
+        'Queue with id 999 not found'
+      );
       expect(mockRepository.delete).not.toHaveBeenCalled();
     });
 
@@ -448,7 +468,7 @@ describe('QueueService', () => {
 
     it('should return empty array when queue has no tasks', async () => {
       const queueWithoutTasks = { ...mockQueue, tasks: [] };
-      
+
       mockRepository.findOneBy.mockResolvedValue(queueWithoutTasks);
 
       const result = await service.getTasks(1);

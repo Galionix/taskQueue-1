@@ -71,47 +71,51 @@ export class KeyboardUtils {
    */
   static createQueueListKeyboard(queues: Array<{ id: number; name: string; isActive?: boolean }>): InlineKeyboardMarkup {
     const buttons: InlineKeyboardButton[][] = [];
-    
+
     // Добавляем кнопки для каждой очереди (по 1 в ряд для лучшего отображения статуса)
     for (const queue of queues) {
-      const activeStatus = queue.isActive !== undefined ? (queue.isActive ? '🟢' : '🔴') : '⚪';
-      
+      const activeStatus =
+        queue.isActive !== undefined ? (queue.isActive ? '🟢' : '🔴') : '⚪';
+
       // Ряд с запуском и статусом
       buttons.push([
         {
           text: `🚀 ${queue.name}`,
-          callback_data: `execute_queue_${queue.id}`
+          callback_data: `execute_queue_${queue.id}`,
         },
         {
           text: `� Статус`,
-          callback_data: `queue_status_${queue.id}`
-        }
+          callback_data: `queue_status_${queue.id}`,
+        },
       ]);
-      
+
       // Ряд с управлением активностью
-      const activityButtonText = queue.isActive !== undefined 
-        ? (queue.isActive ? `🔴 Деактивировать` : `🟢 Активировать`)
-        : `🔄 Переключить`;
-        
+      const activityButtonText =
+        queue.isActive !== undefined
+          ? queue.isActive
+            ? `🔴 Деактивировать`
+            : `🟢 Активировать`
+          : `🔄 Переключить`;
+
       buttons.push([
         {
           text: `${activeStatus} ${activityButtonText}`,
-          callback_data: `toggle_activity_${queue.id}`
-        }
+          callback_data: `toggle_activity_${queue.id}`,
+        },
       ]);
-      
+
       // Разделительная строка (только если это не последняя очередь)
       if (queue !== queues[queues.length - 1]) {
         buttons.push([{ text: '─────────────', callback_data: 'separator' }]);
       }
     }
-    
+
     // Добавляем кнопки навигации
     buttons.push([
       { text: '🔄 Обновить список', callback_data: 'list_queues' },
       { text: '🏠 Главное меню', callback_data: 'main_menu' },
     ]);
-    
+
     return { inline_keyboard: buttons };
   }
 

@@ -175,7 +175,7 @@ describe('TelegramQueueService', () => {
           '❌ Task Task 2 failed: Connection timeout'
         ]
       };
-      
+
       mockQueueService.findAll.mockResolvedValue(mockQueues);
       mockQueueEngineService.executeQueueOnce.mockResolvedValue(failedEngineResult);
 

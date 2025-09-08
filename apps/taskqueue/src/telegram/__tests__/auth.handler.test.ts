@@ -13,12 +13,12 @@ describe('AuthHandler', () => {
   describe('isUserAuthorized', () => {
     it('should authorize user with correct username', () => {
       process.env.TELEGRAM_ALLOWED_USERNAME = 'testuser';
-      
+
       const user: TelegramUserDto = {
         id: 123,
         is_bot: false,
         first_name: 'Test',
-        username: 'testuser'
+        username: 'testuser',
       };
 
       expect(authHandler.isUserAuthorized(user)).toBe(true);
@@ -26,12 +26,12 @@ describe('AuthHandler', () => {
 
     it('should reject unauthorized user', () => {
       process.env.TELEGRAM_ALLOWED_USERNAME = 'testuser';
-      
+
       const user: TelegramUserDto = {
         id: 123,
         is_bot: false,
         first_name: 'Test',
-        username: 'wronguser'
+        username: 'wronguser',
       };
 
       expect(authHandler.isUserAuthorized(user)).toBe(false);
@@ -42,7 +42,7 @@ describe('AuthHandler', () => {
         id: 123,
         is_bot: false,
         first_name: 'Test',
-        username: 'anyuser'
+        username: 'anyuser',
       };
 
       expect(authHandler.isUserAuthorized(user)).toBe(true);
@@ -59,19 +59,19 @@ describe('AuthHandler', () => {
             id: 123,
             is_bot: false,
             first_name: 'Test',
-            username: 'testuser'
+            username: 'testuser',
           },
           chat: {
             id: 123,
-            type: 'private'
+            type: 'private',
           },
           date: Date.now(),
-          text: 'test'
-        }
+          text: 'test',
+        },
       };
 
       const user = authHandler.getUserFromUpdate(update);
-      
+
       expect(user).toBeDefined();
       expect(user?.id).toBe(123);
       expect(user?.username).toBe('testuser');
@@ -86,15 +86,15 @@ describe('AuthHandler', () => {
             id: 123,
             is_bot: false,
             first_name: 'Test',
-            username: 'testuser'
+            username: 'testuser',
           },
           chat_instance: 'instance-1',
-          data: 'test_data'
-        }
+          data: 'test_data',
+        },
       };
 
       const user = authHandler.getUserFromUpdate(update);
-      
+
       expect(user).toBeDefined();
       expect(user?.id).toBe(123);
       expect(user?.username).toBe('testuser');
@@ -102,11 +102,11 @@ describe('AuthHandler', () => {
 
     it('should return null for update without user', () => {
       const update: TelegramUpdateDto = {
-        update_id: 1
+        update_id: 1,
       };
 
       const user = authHandler.getUserFromUpdate(update);
-      
+
       expect(user).toBeNull();
     });
   });

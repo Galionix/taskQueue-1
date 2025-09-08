@@ -71,7 +71,7 @@
    ```bash
    # Переключить активность
    curl -X POST http://localhost:3000/api/queue/1/toggle-activity
-   
+
    # Установить конкретный статус
    curl -X POST http://localhost:3000/api/queue/1/set-activity \
      -H "Content-Type: application/json" \

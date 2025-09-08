@@ -16,25 +16,35 @@ export const DocsTreeNode: React.FC<DocsTreeProps> = ({
   level = 0,
 }) => {
   const isSelected = selectedPath === node.relativePath;
-  
+
   return (
     <div className={styles.treeNode}>
-      <div 
+      <div
         className={`${styles.nodeContent} ${isSelected ? styles.selected : ''}`}
         style={{ paddingLeft: `${level * 20}px` }}
-        onClick={() => node.type === 'file' && node.isMarkdown && onFileSelect(node.relativePath)}
+        onClick={() =>
+          node.type === 'file' &&
+          node.isMarkdown &&
+          onFileSelect(node.relativePath)
+        }
       >
         <span className={styles.nodeIcon}>
           {node.type === 'directory' ? '📁' : node.isMarkdown ? '📄' : '📋'}
         </span>
-        <span className={`${styles.nodeName} ${node.type === 'file' && node.isMarkdown ? styles.clickable : ''}`}>
+        <span
+          className={`${styles.nodeName} ${
+            node.type === 'file' && node.isMarkdown ? styles.clickable : ''
+          }`}
+        >
           {node.name}
         </span>
         {node.type === 'file' && node.size && (
-          <span className={styles.fileSize}>({Math.round(node.size / 1024)}KB)</span>
+          <span className={styles.fileSize}>
+            ({Math.round(node.size / 1024)}KB)
+          </span>
         )}
       </div>
-      
+
       {node.children && node.children.length > 0 && (
         <div className={styles.nodeChildren}>
           {node.children.map((child, index) => (

@@ -19,6 +19,7 @@ export const CreateTask = () => {
     exeType: exeTypesStrings[0],
     name: '',
     payload: JSON.stringify(ExeTypesPayloadMap[0], null, 2),
+    queues: [], // Add queues field
   });
 
   const updateKey =
@@ -64,6 +65,7 @@ export const CreateTask = () => {
         exeType: exeTypesStrings[0],
         name: '',
         payload: JSON.stringify(ExeTypesPayloadMap[0], null, 2),
+        queues: [], // Add queues field
       });
       setShown(false);
     }

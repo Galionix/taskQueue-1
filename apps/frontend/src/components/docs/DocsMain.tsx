@@ -6,17 +6,17 @@ import styles from './DocsMain.module.css';
 
 export const DocsMain: React.FC = () => {
   const [selectedFile, setSelectedFile] = useState<string>('');
-  
-  const { 
-    data: treeData, 
-    isLoading: isLoadingTree, 
-    error: treeError 
+
+  const {
+    data: treeData,
+    isLoading: isLoadingTree,
+    error: treeError,
   } = useDocsTree();
-  
-  const { 
-    data: fileContent, 
-    isLoading: isLoadingFile, 
-    error: fileError 
+
+  const {
+    data: fileContent,
+    isLoading: isLoadingFile,
+    error: fileError,
   } = useDocsFile(selectedFile);
 
   const handleFileSelect = (path: string) => {
@@ -61,7 +61,7 @@ export const DocsMain: React.FC = () => {
           selectedPath={selectedFile}
         />
       </div>
-      
+
       <div className={styles.content}>
         {selectedFile ? (
           <>
@@ -71,7 +71,7 @@ export const DocsMain: React.FC = () => {
                 <p>Loading file...</p>
               </div>
             )}
-            
+
             {fileError && (
               <div className={styles.error}>
                 <h2>❌ Error Loading File</h2>
@@ -81,7 +81,7 @@ export const DocsMain: React.FC = () => {
                 </details>
               </div>
             )}
-            
+
             {fileContent && !isLoadingFile && (
               <DocsViewer content={fileContent} filePath={selectedFile} />
             )}
