@@ -44,9 +44,9 @@ export const useCreateTask = () => {
               id: Math.random(),
               ...newTask,
               queue: null,
-              createdAt: new Date().getDate().toLocaleString(),
-              updatedAt: new Date().getDate().toLocaleString(),
-            },
+              createdAt: new Date().toDateString(),
+              updatedAt: new Date().toDateString(),
+            } as TaskModel,
           ]
         );
       }
@@ -125,10 +125,11 @@ export const useCreateQueue = () => {
               tasks: [],
               state: ETaskState.stopped,
               currentTaskName: '',
-              createdAt: new Date().getDate().toLocaleString(),
-              updatedAt: new Date().getDate().toLocaleString(),
+              createdAt: new Date().toDateString(),
+              updatedAt: new Date().toDateString(),
+              isActive: true,
               ...newQueue,
-            },
+            } as QueueModel,
           ]
         );
       }
@@ -217,6 +218,88 @@ export const useUpdateQueue = () => {
       // Handle error, e.g., display a toast notification
     },
     // Always refetch after error or success:
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['queue'] });
+    },
+  });
+};
+
+export const useToggleQueueActivity = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<QueueModel, Error, number>({
+    mutationFn: queueService.toggleActivity!,
+    onMutate: async (queueId) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['queue'] });
+
+      // Snapshot the previous value
+      const previousQueues = queryClient.getQueryData<QueueModel[]>(['queue']);
+
+      // Optimistically update to the new value
+      if (previousQueues) {
+        queryClient.setQueryData<QueueModel[]>(
+          ['queue'],
+          previousQueues.map((queue) =>
+            queue.id === queueId ? { ...queue, isActive: !queue.isActive } : queue
+          )
+        );
+      }
+
+      return previousQueues;
+    },
+    onSuccess: (updatedQueue) => {
+      queryClient.invalidateQueries({ queryKey: ['queue'] });
+      console.log('Queue activity toggled successfully:', updatedQueue);
+    },
+    onError: (error, queueId, context) => {
+      // Rollback on error
+      if (context) {
+        queryClient.setQueryData(['queue'], context);
+      }
+      console.error('Error toggling queue activity:', error);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['queue'] });
+    },
+  });
+};
+
+export const useSetQueueActivity = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<QueueModel, Error, { id: number; isActive: boolean }>({
+    mutationFn: ({ id, isActive }) => queueService.setActivity!(id, isActive),
+    onMutate: async ({ id, isActive }) => {
+      // Cancel any outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ['queue'] });
+
+      // Snapshot the previous value
+      const previousQueues = queryClient.getQueryData<QueueModel[]>(['queue']);
+
+      // Optimistically update to the new value
+      if (previousQueues) {
+        queryClient.setQueryData<QueueModel[]>(
+          ['queue'],
+          previousQueues.map((queue) =>
+            queue.id === id ? { ...queue, isActive } : queue
+          )
+        );
+      }
+
+      return previousQueues;
+    },
+    onSuccess: (updatedQueue) => {
+      queryClient.invalidateQueries({ queryKey: ['queue'] });
+      console.log('Queue activity set successfully:', updatedQueue);
+    },
+    onError: (error, variables, context) => {
+      // Rollback on error
+      if (context) {
+        queryClient.setQueryData(['queue'], context);
+      }
+      console.error('Error setting queue activity:', error);
+    },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['queue'] });
     },

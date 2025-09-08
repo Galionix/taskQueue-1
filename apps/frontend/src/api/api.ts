@@ -101,6 +101,18 @@ export const queueService: Omit<IQueueService, 'queueRepository'> = {
     >('/queue/' + id);
     return response.data;
   },
+  toggleActivity: async (id) => {
+    const response = await axiosInstance.post<
+      ReturnType<IQueueService['toggleActivity']>
+    >(`/queue/${id}/toggle-activity`);
+    return response.data;
+  },
+  setActivity: async (id, isActive) => {
+    const response = await axiosInstance.post<
+      ReturnType<IQueueService['setActivity']>
+    >(`/queue/${id}/set-activity`, { isActive });
+    return response.data;
+  },
 };
 
 export const queueEngineService: Omit<IQueueEngineService, 'queueRepository'> =

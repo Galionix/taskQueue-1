@@ -2,7 +2,7 @@ import { useState } from 'react';
 
 import { QueueModel } from '@tasks/lib';
 
-import { useDeleteQueue, useTasks, useUpdateQueue } from '../../../api/query';
+import { useDeleteQueue, useTasks, useUpdateQueue, useToggleQueueActivity } from '../../../api/query';
 import s from './editQueue.module.css';
 
 export const EditQueue = ({ q }: { q: QueueModel }) => {
@@ -14,6 +14,7 @@ export const EditQueue = ({ q }: { q: QueueModel }) => {
   const [showEdit, setShowEdit] = useState(false);
   const updateQueue = useUpdateQueue();
   const deleteQueue = useDeleteQueue();
+  const toggleActivity = useToggleQueueActivity();
   const [newData, setNewData] = useState<QueueModel>(q);
 
   const updateKey =
@@ -27,9 +28,9 @@ export const EditQueue = ({ q }: { q: QueueModel }) => {
   const getStatusIcon = (state: string) => {
     switch (state) {
       case '1':
-        return '🟢'; // Active
+        return '🟢'; // Running
       case '0':
-        return '🔴'; // Inactive
+        return '🔴'; // Stopped
       default:
         return '⚪'; // Unknown
     }
@@ -38,12 +39,20 @@ export const EditQueue = ({ q }: { q: QueueModel }) => {
   const getStatusText = (state: string) => {
     switch (state) {
       case '1':
-        return 'Active';
+        return 'Running';
       case '0':
-        return 'Inactive';
+        return 'Stopped';
       default:
         return 'Unknown';
     }
+  };
+
+  const getActivityIcon = (isActive: boolean) => {
+    return isActive ? '🟢' : '🔴';
+  };
+
+  const getActivityText = (isActive: boolean) => {
+    return isActive ? 'Active' : 'Inactive';
   };
 
   if (!showEdit)
@@ -51,10 +60,17 @@ export const EditQueue = ({ q }: { q: QueueModel }) => {
       <div className={s.preview}>
         <div className={s.previewHeader}>
           <h3 className={s.queueName}>{q.name}</h3>
-          <div
-            className={`${s.statusBadge} ${q.state === 0 ? s.inactive : ''}`}
-          >
-            {getStatusIcon(String(q.state))} {getStatusText(String(q.state))}
+          <div className={s.badges}>
+            <div
+              className={`${s.statusBadge} ${q.state === 0 ? s.inactive : ''}`}
+            >
+              {getStatusIcon(String(q.state))} {getStatusText(String(q.state))}
+            </div>
+            <div
+              className={`${s.activityBadge} ${!q.isActive ? s.inactive : ''}`}
+            >
+              {getActivityIcon(q.isActive)} {getActivityText(q.isActive)}
+            </div>
           </div>
         </div>
 
@@ -105,6 +121,18 @@ export const EditQueue = ({ q }: { q: QueueModel }) => {
                 {updateQueue.isPending ? '⏳' : '🗑️ Clear'}
               </button>
             )}
+            <button
+              onClick={() => {
+                if (confirm(`${q.isActive ? 'Deactivate' : 'Activate'} queue "${q.name}"?\n\n${q.isActive ? 'Queue will not run automatically by schedule.' : 'Queue will run automatically by schedule.'}`)) {
+                  toggleActivity.mutate(q.id);
+                }
+              }}
+              className={`${s.quickButton} ${q.isActive ? s.activeButton : s.inactiveButton}`}
+              title={`${q.isActive ? 'Deactivate' : 'Activate'} automatic queue execution`}
+              disabled={toggleActivity.isPending}
+            >
+              {toggleActivity.isPending ? '⏳' : q.isActive ? '🔴 Deactivate' : '🟢 Activate'}
+            </button>
           </div>
         </div>
       </div>

@@ -19,6 +19,7 @@ export const CreateQueue = () => {
     tasks: [],
     schedule: '0 */5 * * * *',
     lockStrategy: ELockStrategy.pauseOnLock,
+    isActive: true,
   });
 
   const updateKey = (key: keyof CreateQueueDtoModel) => (value: string) => {
@@ -51,6 +52,7 @@ export const CreateQueue = () => {
         tasks: [],
         schedule: '0 */5 * * * *',
         lockStrategy: ELockStrategy.pauseOnLock,
+        isActive: true,
       });
       setShown(false);
     }
