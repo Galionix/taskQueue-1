@@ -2,11 +2,10 @@ import * as cron from 'cron';
 import { connect } from 'puppeteer-real-browser';
 
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { IQueueEngineService } from '@tasks/lib';
+import { IQueueEngineService, TaskModel } from '@tasks/lib';
 
 import { QueueEntity } from '../queue/queue.entity';
 import { QueueService } from '../queue/queue.service';
-import { TaskEntity } from '../task/task.entity';
 import { TaskService } from '../task/task.service';
 import { taskProcessors } from './taskProcessors';
 import { Browser } from 'puppeteer-core';
@@ -16,7 +15,7 @@ export class QueueEngineService implements OnModuleInit, IQueueEngineService {
   private schedules: {
     [queueId: number]: {
       job: cron.CronJob;
-      tasks: TaskEntity[];
+      tasks: TaskModel[];
       storage: {
         message: string;
       };
@@ -42,7 +41,7 @@ export class QueueEngineService implements OnModuleInit, IQueueEngineService {
       connectOption: {},
       // defaultViewport: null, // Use the default viewport size
     });
-    this.browser = browser.browser as any
+    this.browser = browser.browser as any;
     browser.page.setViewport(null); // Set viewport to null to use the default size
     // Set the browser to be used in the task processors
     taskProcessors.setBrowser(browser.browser as any);
@@ -99,15 +98,21 @@ export class QueueEngineService implements OnModuleInit, IQueueEngineService {
       }
     });
     job.start();
-    const unorderedTasks = await this.taskRepository.findByIds(queue.tasks || []);
+    const unorderedTasks = await this.taskRepository.findByIds(
+      queue.tasks || []
+    );
     console.log('unorderedTasks: ', unorderedTasks);
-    const tasks = queue.tasks.map((taskId) => {
-      const task = unorderedTasks.find((t) => t.id == taskId);
-      if (!task) {
-        console.error(`Task with ID ${taskId} not found for queue: ${queue.id}`);
-      }
-      return task!;
-    }).filter(Boolean)
+    const tasks = queue.tasks
+      .map((taskId) => {
+        const task = unorderedTasks.find((t) => t.id == taskId);
+        if (!task) {
+          console.error(
+            `Task with ID ${taskId} not found for queue: ${queue.id}`
+          );
+        }
+        return task!;
+      })
+      .filter(Boolean);
     console.log('tasks: ', tasks);
     if (!tasks) {
       console.error(`No tasks found for queue: ${queue.id}`);
@@ -117,7 +122,7 @@ export class QueueEngineService implements OnModuleInit, IQueueEngineService {
       job,
       tasks,
       storage: {
-        message: ''
+        message: '',
       }, // Initialize storage for this queue
     };
     console.log(`Schedule for queue ${queue.id} set up successfully.`);
@@ -158,7 +163,7 @@ export class QueueEngineService implements OnModuleInit, IQueueEngineService {
       connectOption: {},
       // defaultViewport: null, // Use the default viewport size
     });
-    this.browser = browser.browser as any
+    this.browser = browser.browser as any;
     browser.page.setViewport(null); // Set viewport to null to use the default size
     // Set the browser to be used in the task processors
     taskProcessors.setBrowser(browser.browser as any);
@@ -172,7 +177,7 @@ export class QueueEngineService implements OnModuleInit, IQueueEngineService {
     console.log('Queue Engine restarted successfully.');
   }
 
-  private async processTask(task: TaskEntity, storage: { [key: string]: any }) {
+  private async processTask(task: TaskModel, storage: { [key: string]: any }) {
     // taskProcessors
     const processor = taskProcessors.getProcessor(task.exeType);
     if (!processor) {

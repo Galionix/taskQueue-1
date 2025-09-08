@@ -18,11 +18,11 @@ export class ScreenshotCleanupService implements OnModuleInit {
     try {
       if (fs.existsSync(this.screenshotsPath)) {
         const files = fs.readdirSync(this.screenshotsPath);
-        
+
         files.forEach(file => {
           const filePath = path.join(this.screenshotsPath, file);
           const stat = fs.statSync(filePath);
-          
+
           if (stat.isDirectory()) {
             // Удаляем папки задач
             this.removeDirectory(filePath);
@@ -31,7 +31,7 @@ export class ScreenshotCleanupService implements OnModuleInit {
             fs.unlinkSync(filePath);
           }
         });
-        
+
         this.logger.log(`✅ Screenshots folder cleaned: ${this.screenshotsPath}`);
       } else {
         // Создаем папку если её нет
@@ -49,18 +49,18 @@ export class ScreenshotCleanupService implements OnModuleInit {
   private removeDirectory(dirPath: string): void {
     if (fs.existsSync(dirPath)) {
       const files = fs.readdirSync(dirPath);
-      
+
       files.forEach(file => {
         const filePath = path.join(dirPath, file);
         const stat = fs.statSync(filePath);
-        
+
         if (stat.isDirectory()) {
           this.removeDirectory(filePath);
         } else {
           fs.unlinkSync(filePath);
         }
       });
-      
+
       fs.rmdirSync(dirPath);
     }
   }

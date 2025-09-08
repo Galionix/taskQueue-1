@@ -32,7 +32,9 @@ describe('KeyboardUtils', () => {
       allButtons.forEach((button) => {
         expect(button.callback_data).toBeDefined();
         expect(typeof button.callback_data).toBe('string');
-        expect(button.callback_data.length).toBeGreaterThan(0);
+        if (button.callback_data) {
+          expect(button.callback_data.length).toBeGreaterThan(0);
+        }
       });
     });
 

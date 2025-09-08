@@ -1,6 +1,5 @@
-import { ExeTypes, ExeTypesPayloadMap } from '@tasks/lib';
+import { ExeTypes, ExeTypesPayloadMap, TaskModel } from '@tasks/lib';
 
-import { TaskEntity } from '../../task/task.entity';
 import { EResourceType, taskProcessors, taskProcessorType } from './';
 
 const payloadType = ExeTypesPayloadMap[ExeTypes.find_on_page_elements];
@@ -10,7 +9,7 @@ export const findOnPageElements = (): taskProcessorType => {
     name: 'findOnPageElements',
     description: 'Finds elements on a page based on given criteria',
     blocks: [EResourceType.browser],
-    execute: async (data: TaskEntity, storage) => {
+    execute: async (data: TaskModel, storage) => {
       taskProcessors.addBlockedResource(EResourceType.browser);
 
       const browser = taskProcessors.browser;

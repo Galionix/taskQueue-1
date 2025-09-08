@@ -1,8 +1,7 @@
 import { Browser } from 'puppeteer-core';
 
-import { ExeTypes } from '@tasks/lib';
+import { ExeTypes, TaskModel } from '@tasks/lib';
 
-import { TaskEntity } from '../../task/task.entity';
 import { findOnPageElements } from './find_on_page_elements.processor';
 import { notifyWithMessageFromStore } from './notify_with_message_from_store.processor';
 import { openBrowserTab } from './open_browser_tab.processor';
@@ -15,7 +14,7 @@ export type taskProcessorType = {
   name: string;
   description: string;
   blocks?: EResourceType[];
-  execute: (data: TaskEntity, storage: { [key: string]: any }) => Promise<any>;
+  execute: (data: TaskModel, storage: { [key: string]: any }) => Promise<any>;
 };
 export type taskProcessorsType = {
   [key in keyof typeof ExeTypes]: taskProcessorType;
@@ -29,7 +28,7 @@ export class TaskProcessors {
   public browser: Browser | null = null;
   public blockedResources: EResourceType[] = [];
   private telegramApiService: any; // Будет инжектиться через DI
-  private processors: taskProcessorsType;
+  private processors: taskProcessorsType = {} as taskProcessorsType;
 
   constructor(telegramApiService?: any) {
     this.telegramApiService = telegramApiService;

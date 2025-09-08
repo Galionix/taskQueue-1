@@ -171,7 +171,7 @@ export class TelegramApiService {
     try {
       const FormData = require('form-data');
       const fs = require('fs');
-      
+
       const form = new FormData();
       form.append('chat_id', chatId);
       form.append('photo', fs.createReadStream(photoPath));
@@ -183,7 +183,7 @@ export class TelegramApiService {
       await axios.post(`${this.API_URL}/sendPhoto`, form, {
         headers: form.getHeaders(),
       });
-      
+
       this.logger.log(`Photo sent to chat ${chatId}: ${photoPath}`);
     } catch (error) {
       this.handleApiError(error, 'Failed to send photo');
@@ -198,18 +198,18 @@ export class TelegramApiService {
     try {
       const FormData = require('form-data');
       const fs = require('fs');
-      
+
       const form = new FormData();
       form.append('chat_id', chatId);
-      
+
       const media = photoPaths.map((path, index) => ({
         type: 'photo',
         media: `attach://photo${index}`,
         ...(index === 0 && caption ? { caption, parse_mode: 'HTML' } : {})
       }));
-      
+
       form.append('media', JSON.stringify(media));
-      
+
       photoPaths.forEach((path, index) => {
         form.append(`photo${index}`, fs.createReadStream(path));
       });
@@ -217,7 +217,7 @@ export class TelegramApiService {
       await axios.post(`${this.API_URL}/sendMediaGroup`, form, {
         headers: form.getHeaders(),
       });
-      
+
       this.logger.log(`Media group sent to chat ${chatId}: ${photoPaths.length} photos`);
     } catch (error) {
       this.handleApiError(error, 'Failed to send media group');

@@ -26,28 +26,28 @@ export class TaskService implements ITaskService {
       payload: createTaskDto.payload,
       dependencies: createTaskDto.dependencies,
     };
-    
+
     const task = this.taskRepository.create(taskData);
     const saved = await this.taskRepository.save(task);
-    
+
     // Если указаны очереди в DTO, добавляем их
     if (createTaskDto.queues && createTaskDto.queues.length > 0) {
       const queueRepo = this.taskRepository.manager.getRepository(QueueEntity);
       const queues = await queueRepo.findBy({ id: In(createTaskDto.queues) });
-      
+
       // Загружаем сохраненную задачу с отношениями для обновления
       const taskWithRelations = await this.taskRepository.findOne({
         where: { id: saved.id },
         relations: ['queueEntities'],
       });
-      
+
       if (taskWithRelations) {
         taskWithRelations.queueEntities = queues;
         await this.taskRepository.save(taskWithRelations);
         return taskWithRelations;
       }
     }
-    
+
     return saved;
   };
 
@@ -111,7 +111,7 @@ export class TaskService implements ITaskService {
       where: { id },
       relations: ['queueEntities'],
     });
-    
+
     if (!existingTask) {
       throw new Error(`Task with id ${id} not found`);
     }
@@ -133,7 +133,8 @@ export class TaskService implements ITaskService {
     // Обновляем связи с очередями, если они переданы
     if (updateTaskDto.queues !== undefined) {
       if (updateTaskDto.queues.length > 0) {
-        const queueRepo = this.taskRepository.manager.getRepository(QueueEntity);
+        const queueRepo =
+          this.taskRepository.manager.getRepository(QueueEntity);
         const queues = await queueRepo.findBy({ id: In(updateTaskDto.queues) });
         existingTask.queueEntities = queues;
       } else {

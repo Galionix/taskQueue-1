@@ -1,8 +1,7 @@
 import * as Push from 'pushover-notifications';
 
-import { ExeTypes, ExeTypesPayloadMap } from '@tasks/lib';
+import { ExeTypes, ExeTypesPayloadMap, TaskModel } from '@tasks/lib';
 
-import { TaskEntity } from '../../task/task.entity';
 import { taskProcessorType } from './';
 
 console.log('Push: ', Push.default);
@@ -14,7 +13,7 @@ export const notifyWithMessageFromStore = (): taskProcessorType => {
     name: 'notifyWithMessageFromStore',
     description: 'Notifies with a message from the storage',
     blocks: [],
-    execute: async (data: TaskEntity, storage) => {
+    execute: async (data: TaskModel, storage) => {
       const { sendIfEmpty, ...payload } = JSON.parse(
         data.payload
       ) as typeof payloadType;
@@ -22,7 +21,7 @@ export const notifyWithMessageFromStore = (): taskProcessorType => {
         return { success: true, message: 'No message found in storage' };
       }
 
-      const p = new Push.default({
+      const p = new (Push as any).default({
         user: process.env['PUSHOVER_USER'],
         token: process.env['PUSHOVER_TOKEN'],
       });
@@ -32,13 +31,13 @@ export const notifyWithMessageFromStore = (): taskProcessorType => {
         message: storage.message || payload.message, // required
       };
 
-      p.send(msg, function (err, result) {
+      p.send(msg, function (err: Error | null, result: any) {
         if (err) {
           throw err;
         }
         console.log(result);
       });
-      storage.message =''; // Clear the message after sending notification
+      storage.message = ''; // Clear the message after sending notification
       //   const message = storage.message || 'No message found';
       //   console.log(`Notifying with message: ${message}`);
       return {

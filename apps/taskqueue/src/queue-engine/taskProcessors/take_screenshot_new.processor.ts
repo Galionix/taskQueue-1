@@ -6,15 +6,12 @@ import { promisify } from 'util';
 import { ExeTypes, ExeTypesPayloadMap, TaskModel } from '@tasks/lib';
 
 import { taskProcessorType } from './';
-import { execAsync } from './exec-async';
 
+const execAsync = promisify(exec);
 const payloadType = ExeTypesPayloadMap[ExeTypes.take_screenshot];
 
 // Функция для отправки скриншотов в Telegram
-async function sendScreenshotsToTelegram(
-  screenshotFiles: string[],
-  caption: string
-): Promise<void> {
+async function sendScreenshotsToTelegram(screenshotFiles: string[], caption: string): Promise<void> {
   const chatId = process.env.TELEGRAM_CHAT_ID;
   const botToken = process.env.TELEGRAM_BOT_TOKEN;
 
@@ -34,26 +31,17 @@ async function sendScreenshotsToTelegram(
 
   const API_URL = `https://api.telegram.org/bot${botToken}`;
 
-  console.log(
-    `Attempting to send ${screenshotFiles.length} screenshots to chat ${chatId}`
-  );
+  console.log(`Attempting to send ${screenshotFiles.length} screenshots to chat ${chatId}`);
 
   try {
     // Сначала проверим, что бот может отправлять сообщения в чат
     try {
-      const testResponse = await axios.get(
-        `${API_URL}/getChat?chat_id=${chatId}`
-      );
+      const testResponse = await axios.get(`${API_URL}/getChat?chat_id=${chatId}`);
       console.log('Bot has access to chat:', testResponse.data.ok);
     } catch (testError: any) {
-      console.warn(
-        'Bot test access failed:',
-        testError.response?.data || testError.message
-      );
+      console.warn('Bot test access failed:', testError.response?.data || testError.message);
       if (testError.response?.status === 403) {
-        console.error(
-          'Bot does not have permission to access this chat. Please:'
-        );
+        console.error('Bot does not have permission to access this chat. Please:');
         console.error('1. Make sure the bot is added to the chat');
         console.error('2. Make sure the bot has permission to send messages');
         console.error('3. Check that TELEGRAM_CHAT_ID is correct');
@@ -83,7 +71,7 @@ async function sendScreenshotsToTelegram(
       const media = screenshotFiles.map((path, index) => ({
         type: 'photo',
         media: `attach://photo${index}`,
-        ...(index === 0 ? { caption, parse_mode: 'HTML' } : {}),
+        ...(index === 0 ? { caption, parse_mode: 'HTML' } : {})
       }));
 
       form.append('media', JSON.stringify(media));
@@ -100,15 +88,11 @@ async function sendScreenshotsToTelegram(
       console.log(`Screenshots sent successfully: ${response.data.ok}`);
     }
 
-    console.log(
-      `✅ Screenshots sent to Telegram: ${screenshotFiles.length} files`
-    );
+    console.log(`✅ Screenshots sent to Telegram: ${screenshotFiles.length} files`);
   } catch (error: any) {
     if (error.response?.status === 403) {
       console.error('❌ Telegram Bot Access Error (403):');
-      console.error(
-        'The bot does not have permission to send messages to this chat.'
-      );
+      console.error('The bot does not have permission to send messages to this chat.');
       console.error('Please check:');
       console.error('1. Bot is added to the chat');
       console.error('2. Bot has "Send Messages" permission');
@@ -117,10 +101,7 @@ async function sendScreenshotsToTelegram(
     } else if (error.response?.status === 400) {
       console.error('❌ Bad Request (400):', error.response.data);
     } else {
-      console.error(
-        '❌ Failed to send screenshots to Telegram:',
-        error.response?.data || error.message
-      );
+      console.error('❌ Failed to send screenshots to Telegram:', error.response?.data || error.message);
     }
 
     // Не выбрасываем ошибку, чтобы не прерывать выполнение задачи
@@ -138,10 +119,7 @@ export const takeScreenshot = (): taskProcessorType => {
 
       try {
         // Создаем папку для конкретной задачи
-        const taskFolderName = `task_${data.id}_${data.name.replace(
-          /[^a-zA-Z0-9]/g,
-          '_'
-        )}`;
+        const taskFolderName = `task_${data.id}_${data.name.replace(/[^a-zA-Z0-9]/g, '_')}`;
         const taskOutputPath = path.join(payload.outputPath, taskFolderName);
 
         // Создаем директорию если её нет
@@ -155,11 +133,8 @@ export const takeScreenshot = (): taskProcessorType => {
         const fullPath = path.join(taskOutputPath, filename);
 
         // Создаем PowerShell скрипт для захвата всех экранов
-        const powershellScriptPath = path.join(
-          taskOutputPath,
-          'screenshot_script.ps1'
-        );
-        const powershellScript = `Add-Type -AssemblyName System.Windows.Forms
+        const powershellScript = `
+Add-Type -AssemblyName System.Windows.Forms
 Add-Type -AssemblyName System.Drawing
 
 # Получаем границы всех экранов
@@ -182,19 +157,14 @@ $graphics.Dispose()
 $bitmap.Dispose()
 
 Write-Host "Screenshot saved to ${fullPath.replace(/\\/g, '\\\\')}"
-Write-Host "Size: $($bounds.Width)x$($bounds.Height)"`;
-
-        // Сохраняем скрипт во временный файл
-        fs.writeFileSync(powershellScriptPath, powershellScript);
+Write-Host "Size: $($bounds.Width)x$($bounds.Height)"
+        `.trim();
 
         // Выполняем PowerShell скрипт
-        const command = `powershell -ExecutionPolicy Bypass -File "${powershellScriptPath}"`;
+        const command = `powershell -Command "${powershellScript.replace(/"/g, '\`"')}"`;
 
         console.log('Taking screenshot of all screens...');
         await execAsync(command);
-
-        // Удаляем временный скрипт
-        fs.unlinkSync(powershellScriptPath);
 
         // Проверяем, что файл создался
         if (!fs.existsSync(fullPath)) {
@@ -212,15 +182,9 @@ Write-Host "Size: $($bounds.Width)x$($bounds.Height)"`;
 
           // Отправляем скриншот в Telegram если настроен TELEGRAM_CHAT_ID
           try {
-            await sendScreenshotsToTelegram(
-              [fullPath],
-              `📸 Скриншот всех экранов из задачи: ${data.name}`
-            );
+            await sendScreenshotsToTelegram([fullPath], `📸 Скриншот всех экранов из задачи: ${data.name}`);
           } catch (error: any) {
-            console.warn(
-              'Failed to send screenshot to Telegram:',
-              error.message
-            );
+            console.warn('Failed to send screenshot to Telegram:', error.message);
             // Добавляем информацию об ошибке в storage, но не прерываем выполнение
             storage.telegramError = `Failed to send to Telegram: ${error.message}`;
           }

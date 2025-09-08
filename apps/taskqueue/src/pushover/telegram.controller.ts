@@ -1,7 +1,7 @@
 import { Body, Controller, Post, Logger, Get, Param } from '@nestjs/common';
 import { TelegramService } from './telegram.service';
 import { TelegramApiService } from './telegram-api.service';
-import { TelegramUpdateDto } from './dto/telegram.dto';
+import type { TelegramUpdateDto } from './dto/telegram.dto';
 
 @Controller('telegram')
 export class TelegramController {

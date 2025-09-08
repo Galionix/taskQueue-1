@@ -5,7 +5,12 @@
   "scripts": {
     "dev:frontend": "npx nx run @tasks/frontend:dev",
     "dev:backend": "npx nx run @tasks/taskqueue:serve --configuration=development",
-    "test": "npx nx test taskqueue"
+    "test": "npx nx test taskqueue",
+    "typecheck": "npm run typecheck:taskqueue && npm run typecheck:frontend && npm run typecheck:lib",
+    "typecheck:taskqueue": "npx tsc --noEmit --project apps/taskqueue/tsconfig.app.json",
+    "typecheck:frontend": "npx tsc --noEmit --project apps/frontend/tsconfig.json",
+    "typecheck:lib": "npx tsc --noEmit --project lib/tsconfig.lib.json",
+    "typecheck:all": "npx tsc --noEmit --project ."
   },
   "private": true,
   "dependencies": {

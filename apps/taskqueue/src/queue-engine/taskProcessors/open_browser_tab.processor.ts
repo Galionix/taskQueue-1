@@ -1,16 +1,15 @@
-import { ExeTypes, ExeTypesPayloadMap } from '@tasks/lib';
+import { ExeTypes, ExeTypesPayloadMap, TaskModel } from '@tasks/lib';
 
-import { TaskEntity } from '../../task/task.entity';
 import { EResourceType, taskProcessors, taskProcessorType } from './';
 
 const payloadType = ExeTypesPayloadMap[ExeTypes.open_browser_tab];
 
-export const openBrowserTab = ():taskProcessorType => {
+export const openBrowserTab = (): taskProcessorType => {
   return {
     name: 'openBrowserTab',
     description: 'Opens a new browser tab',
     blocks: [EResourceType.browser],
-    execute: async (data: TaskEntity, storage) => {
+    execute: async (data: TaskModel, storage) => {
       taskProcessors.addBlockedResource(EResourceType.browser);
       // Ensure the payload is parsed correctly
       const payload = JSON.parse(data.payload) as typeof payloadType;
