@@ -69,53 +69,41 @@ export class KeyboardUtils {
   /**
    * Create queue list keyboard with dynamic buttons for each queue
    */
-  static createQueueListKeyboard(queues: Array<{ id: number; name: string }>): InlineKeyboardMarkup {
+  static createQueueListKeyboard(queues: Array<{ id: number; name: string; isActive?: boolean }>): InlineKeyboardMarkup {
     const buttons: InlineKeyboardButton[][] = [];
     
-    // Добавляем кнопки для каждой очереди (по 2 в ряд)
-    for (let i = 0; i < queues.length; i += 2) {
-      const row: InlineKeyboardButton[] = [];
+    // Добавляем кнопки для каждой очереди (по 1 в ряд для лучшего отображения статуса)
+    for (const queue of queues) {
+      const activeStatus = queue.isActive !== undefined ? (queue.isActive ? '🟢' : '🔴') : '⚪';
       
-      // Первая очередь в ряду
-      const queue1 = queues[i];
-      row.push({
-        text: `🚀 ${queue1.name}`,
-        callback_data: `execute_queue_${queue1.id}`
-      });
+      // Ряд с запуском и статусом
+      buttons.push([
+        {
+          text: `🚀 ${queue.name}`,
+          callback_data: `execute_queue_${queue.id}`
+        },
+        {
+          text: `� Статус`,
+          callback_data: `queue_status_${queue.id}`
+        }
+      ]);
       
-      // Вторая очередь в ряду (если есть)
-      if (i + 1 < queues.length) {
-        const queue2 = queues[i + 1];
-        row.push({
-          text: `🚀 ${queue2.name}`,
-          callback_data: `execute_queue_${queue2.id}`
-        });
+      // Ряд с управлением активностью
+      const activityButtonText = queue.isActive !== undefined 
+        ? (queue.isActive ? `🔴 Деактивировать` : `🟢 Активировать`)
+        : `🔄 Переключить`;
+        
+      buttons.push([
+        {
+          text: `${activeStatus} ${activityButtonText}`,
+          callback_data: `toggle_activity_${queue.id}`
+        }
+      ]);
+      
+      // Разделительная строка (только если это не последняя очередь)
+      if (queue !== queues[queues.length - 1]) {
+        buttons.push([{ text: '─────────────', callback_data: 'separator' }]);
       }
-      
-      buttons.push(row);
-    }
-    
-    // Добавляем кнопки статуса для каждой очереди
-    for (let i = 0; i < queues.length; i += 2) {
-      const row: InlineKeyboardButton[] = [];
-      
-      // Статус первой очереди
-      const queue1 = queues[i];
-      row.push({
-        text: `📊 ${queue1.name}`,
-        callback_data: `queue_status_${queue1.id}`
-      });
-      
-      // Статус второй очереди (если есть)
-      if (i + 1 < queues.length) {
-        const queue2 = queues[i + 1];
-        row.push({
-          text: `📊 ${queue2.name}`,
-          callback_data: `queue_status_${queue2.id}`
-        });
-      }
-      
-      buttons.push(row);
     }
     
     // Добавляем кнопки навигации

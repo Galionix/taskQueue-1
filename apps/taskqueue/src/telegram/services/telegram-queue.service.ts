@@ -21,6 +21,7 @@ export interface QueueListItem {
   state: ETaskState;
   taskCount: number;
   schedule: string;
+  isActive: boolean;
 }
 
 @Injectable()
@@ -47,6 +48,7 @@ export class TelegramQueueService {
         state: queue.state,
         taskCount: queue.tasks?.length || 0,
         schedule: queue.schedule,
+        isActive: queue.isActive,
       }));
     } catch (error) {
       this.logger.error('❌ Error getting queues list:', error);
@@ -136,14 +138,15 @@ export class TelegramQueueService {
 
       if (!queue) {
         return `❌ Queue ${queueId} not found`;
-      }
-
-      const stateEmoji = this.getStateEmoji(queue.state);
+      }      const stateEmoji = this.getStateEmoji(queue.state);
       const stateText = this.getStateText(queue.state);
-
+      const activityEmoji = queue.isActive ? '🟢' : '⚪';
+      const activityText = queue.isActive ? 'Активна' : 'Неактивна';
+      
       return [
         `🎯 Queue: ${queue.name}`,
         `${stateEmoji} Status: ${stateText}`,
+        `${activityEmoji} Activity: ${activityText}`,
         `📊 Tasks: ${queue.tasks?.length || 0}`,
         `⏰ Schedule: ${queue.schedule}`,
       ].join('\n');
@@ -152,6 +155,67 @@ export class TelegramQueueService {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(`Error getting queue ${queueId} status:`, error);
       return `❌ Error getting queue status: ${errorMessage}`;
+    }
+  }
+
+  /**
+   * Переключить активность очереди (включить/выключить автоматическое выполнение по расписанию)
+   */
+  async toggleQueueActivity(queueId: number): Promise<{
+    success: boolean;
+    queueId: number;
+    queueName: string;
+    isActive: boolean;
+    message: string;
+  }> {
+    this.logger.log(`🔄 Toggling activity for queue ${queueId}`);
+    
+    try {
+      const queues = await this.queueService.findAll();
+      const targetQueue = queues.find(q => q.id === queueId);
+      
+      if (!targetQueue) {
+        throw new Error(`Queue with ID ${queueId} not found`);
+      }
+
+      // Переключаем активность через QueueService
+      const updatedQueue = await this.queueService.toggleActivity!(queueId);
+      
+      const statusText = updatedQueue.isActive ? 'активирована' : 'деактивирована';
+      const statusEmoji = updatedQueue.isActive ? '🟢' : '⚪';
+      
+      const message = [
+        `${statusEmoji} Очередь "${updatedQueue.name}" ${statusText}`,
+        '',
+        updatedQueue.isActive 
+          ? '✅ Очередь будет выполняться по расписанию'
+          : '⏸️ Очередь НЕ будет выполняться по расписанию',
+        `📋 Ручное выполнение через бота остается доступным`,
+        `⏰ Расписание: ${updatedQueue.schedule}`,
+      ].join('\n');
+
+      this.logger.log(`✅ Queue ${queueId} activity toggled to: ${updatedQueue.isActive}`);
+
+      return {
+        success: true,
+        queueId,
+        queueName: updatedQueue.name,
+        isActive: updatedQueue.isActive,
+        message,
+      };
+
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      
+      this.logger.error(`❌ Failed to toggle queue ${queueId} activity:`, error);
+
+      return {
+        success: false,
+        queueId,
+        queueName: 'Unknown Queue',
+        isActive: false,
+        message: `❌ Ошибка переключения активности: ${errorMessage}`,
+      };
     }
   }
 

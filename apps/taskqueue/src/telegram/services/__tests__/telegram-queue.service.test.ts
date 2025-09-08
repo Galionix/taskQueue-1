@@ -21,6 +21,7 @@ describe('TelegramQueueService', () => {
       updatedAt: '2025-01-01',
       schedule: '0 0 * * *',
       lockStrategy: null,
+      isActive: true,
     },
     {
       id: 2,
@@ -32,6 +33,7 @@ describe('TelegramQueueService', () => {
       updatedAt: '2025-01-01',
       schedule: '0 12 * * *',
       lockStrategy: null,
+      isActive: false,
     },
   ];
 
@@ -89,6 +91,7 @@ describe('TelegramQueueService', () => {
         state: ETaskState.stopped,
         taskCount: 2,
         schedule: '0 0 * * *',
+        isActive: true,
       });
       expect(result[1]).toEqual({
         id: 2,
@@ -96,6 +99,7 @@ describe('TelegramQueueService', () => {
         state: ETaskState.running,
         taskCount: 1,
         schedule: '0 12 * * *',
+        isActive: false,
       });
     });
 
@@ -220,6 +224,69 @@ describe('TelegramQueueService', () => {
       const result = await service.getQueueStatus(1);
 
       expect(result).toContain('❌ Error getting queue status: Database error');
+    });
+  });
+
+  describe('toggleQueueActivity', () => {
+    beforeEach(() => {
+      mockQueueService.toggleActivity = jest.fn();
+    });
+
+    it('should toggle queue activity successfully', async () => {
+      const mockUpdatedQueue = {
+        ...mockQueues[0],
+        isActive: true,
+      };
+
+      mockQueueService.findAll.mockResolvedValue(mockQueues);
+      mockQueueService.toggleActivity!.mockResolvedValue(mockUpdatedQueue);
+
+      const result = await service.toggleQueueActivity(1);
+
+      expect(result.success).toBe(true);
+      expect(result.queueId).toBe(1);
+      expect(result.queueName).toBe('Test Queue 1');
+      expect(result.isActive).toBe(true);
+      expect(result.message).toContain('🟢 Очередь "Test Queue 1" активирована');
+      expect(result.message).toContain('✅ Очередь будет выполняться по расписанию');
+    });
+
+    it('should handle deactivation correctly', async () => {
+      const mockUpdatedQueue = {
+        ...mockQueues[0],
+        isActive: false,
+      };
+
+      mockQueueService.findAll.mockResolvedValue(mockQueues);
+      mockQueueService.toggleActivity!.mockResolvedValue(mockUpdatedQueue);
+
+      const result = await service.toggleQueueActivity(1);
+
+      expect(result.success).toBe(true);
+      expect(result.isActive).toBe(false);
+      expect(result.message).toContain('⚪ Очередь "Test Queue 1" деактивирована');
+      expect(result.message).toContain('⏸️ Очередь НЕ будет выполняться по расписанию');
+    });
+
+    it('should handle queue not found', async () => {
+      mockQueueService.findAll.mockResolvedValue(mockQueues);
+
+      const result = await service.toggleQueueActivity(999);
+
+      expect(result.success).toBe(false);
+      expect(result.queueId).toBe(999);
+      expect(result.queueName).toBe('Unknown Queue');
+      expect(result.isActive).toBe(false);
+      expect(result.message).toContain('❌ Ошибка переключения активности: Queue with ID 999 not found');
+    });
+
+    it('should handle service errors', async () => {
+      mockQueueService.findAll.mockRejectedValue(new Error('Database error'));
+
+      const result = await service.toggleQueueActivity(1);
+
+      expect(result.success).toBe(false);
+      expect(result.message).toContain('❌ Ошибка переключения активности: Database error');
     });
   });
 });

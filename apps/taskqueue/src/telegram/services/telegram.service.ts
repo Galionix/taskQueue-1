@@ -307,7 +307,7 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
 
       // Создаем клавиатуру с кнопками для каждой очереди
       const keyboard = KeyboardUtils.createQueueListKeyboard(
-        queues.map(q => ({ id: q.id, name: q.name }))
+        queues.map(q => ({ id: q.id, name: q.name, isActive: q.isActive }))
       );
 
       await this.telegramApiService.sendMessage(chatId, message, keyboard);

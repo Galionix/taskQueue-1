@@ -87,9 +87,43 @@ export class QueueService implements IQueueService {
   };
 
   findActive = async () => {
-    return await this.queueRepository.findBy({
-      state: 1,
+    return await this.queueRepository.find({
+      where: {
+        isActive: true
+      }
     });
+  };
+
+  /**
+   * Toggle queue activity (enable/disable automatic execution by schedule)
+   */
+  toggleActivity = async (id: number): Promise<QueueEntity> => {
+    const queue = await this.queueRepository.findOneBy({ id });
+    if (!queue) {
+      throw new Error(`Queue with id ${id} not found`);
+    }
+    
+    queue.isActive = !queue.isActive;
+    const updatedQueue = await this.queueRepository.save(queue);
+    
+    Logger.log(`Queue ${id} activity toggled to: ${updatedQueue.isActive ? 'ACTIVE' : 'INACTIVE'}`);
+    return updatedQueue;
+  };
+
+  /**
+   * Set queue activity status
+   */
+  setActivity = async (id: number, isActive: boolean): Promise<QueueEntity> => {
+    const queue = await this.queueRepository.findOneBy({ id });
+    if (!queue) {
+      throw new Error(`Queue with id ${id} not found`);
+    }
+    
+    queue.isActive = isActive;
+    const updatedQueue = await this.queueRepository.save(queue);
+    
+    Logger.log(`Queue ${id} activity set to: ${updatedQueue.isActive ? 'ACTIVE' : 'INACTIVE'}`);
+    return updatedQueue;
   };
   getTasks = async (id: number) => {
     const queue = await this.queueRepository.findOneBy({ id });

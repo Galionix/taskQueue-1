@@ -6,4 +6,6 @@ export class CreateQueueDto extends PickType(QueueEntity, [
   'name',
   'tasks',
   'schedule',
+  'lockStrategy',
+  'isActive',
 ] as const) {}

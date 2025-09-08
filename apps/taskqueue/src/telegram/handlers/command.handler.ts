@@ -67,6 +67,11 @@ export class CommandHandler {
         result = await this.showHelp();
         break;
 
+      case 'separator':
+        // Игнорируем нажатия на разделительные кнопки
+        result = { success: true, message: 'Выберите действие из меню выше ⬆️' };
+        break;
+
       default:
         // Проверяем, не является ли это командой запуска конкретной очереди
         if (command.startsWith('execute_queue_')) {
@@ -84,6 +89,16 @@ export class CommandHandler {
           const queueId = parseInt(queueIdStr, 10);
           if (!isNaN(queueId)) {
             result = await this.getQueueStatus(queueId);
+            break;
+          }
+        }
+
+        // Проверяем, не является ли это командой переключения активности очереди
+        if (command.startsWith('toggle_activity_')) {
+          const queueIdStr = command.replace('toggle_activity_', '');
+          const queueId = parseInt(queueIdStr, 10);
+          if (!isNaN(queueId)) {
+            result = await this.toggleQueueActivity(queueId);
             break;
           }
         }
@@ -167,16 +182,25 @@ export class CommandHandler {
         return { success: true, message: '📋 Очереди не найдены' };
       }
 
-      const queueList = queues.map((queue, index) => 
-        `${index + 1}. 📋 ${queue.name} (ID: ${queue.id})\n` +
-        `   📊 Статус: ${this.getStateEmoji(queue.state)} ${queue.state}\n` +
-        `   🔢 Задач: ${queue.taskCount}\n` +
-        `   ⏰ Расписание: ${queue.schedule}\n`
-      ).join('\n');
+      const queueList = queues.map((queue, index) => {
+        const activeEmoji = queue.isActive !== undefined ? (queue.isActive ? '🟢' : '🔴') : '⚪';
+        const activeText = queue.isActive !== undefined ? (queue.isActive ? 'Активна' : 'Неактивна') : 'Неизвестно';
+        
+        return `${index + 1}. 📋 ${queue.name} (ID: ${queue.id})\n` +
+               `   📊 Статус: ${this.getStateEmoji(queue.state)} ${queue.state}\n` +
+               `   ${activeEmoji} Активность: ${activeText}\n` +
+               `   🔢 Задач: ${queue.taskCount}\n` +
+               `   ⏰ Расписание: ${queue.schedule}\n`;
+      }).join('\n');
+
+      const helpText = '\n💡 Управление:\n' +
+                      '• 🚀 Запустить - выполнить очередь один раз\n' +
+                      '• 📊 Статус - подробная информация\n' +
+                      '• 🟢/🔴 Активность - включить/выключить автовыполнение по расписанию';
 
       return {
         success: true,
-        message: `📋 Список очередей (${queues.length}):\n\n${queueList}`
+        message: `📋 Список очередей (${queues.length}):\n\n${queueList}${helpText}`
       };
     } catch (error) {
       this.logger.error('❌ Error getting queues list:', error);
@@ -239,6 +263,23 @@ export class CommandHandler {
     }
   }
 
+  private async toggleQueueActivity(queueId: number): Promise<CommandResult> {
+    this.logger.log(`🔄 Toggling activity for queue ${queueId}`);
+    
+    try {
+      if (!this.telegramQueueService) {
+        return { success: false, message: 'TelegramQueueService недоступен' };
+      }
+
+      const result = await this.telegramQueueService.toggleQueueActivity(queueId);
+      return { success: result.success, message: result.message };
+    } catch (error) {
+      this.logger.error(`❌ Error toggling queue ${queueId} activity:`, error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      return { success: false, message: `❌ Ошибка переключения активности: ${errorMessage}` };
+    }
+  }
+
   private getStateEmoji(state: ETaskState): string {
     switch (state) {
       case ETaskState.running: return '🟢';
@@ -273,15 +314,21 @@ export class CommandHandler {
       '• 📋 Список очередей - показать все доступные очереди',
       '• 🚀 Запустить очередь - выполнить все задачи очереди один раз',
       '• 📊 Статус очереди - получить информацию о состоянии очереди',
+      '• 🟢/🔴 Управление активностью - включить/выключить автовыполнение по расписанию',
       '',
       '🔧 Управление системой:',
       '• 📊 Общий статус - статус всей системы',
       '• 🔄 Restart Engine - перезапустить движок очередей',
       '',
-      '💡 Подсказки:',
+      '⚙️ Статусы активности очередей:',
+      '• � Активная - выполняется по расписанию и доступна для ручного запуска',
+      '• 🔴 Неактивная - НЕ выполняется по расписанию, но доступна для ручного запуска',
+      '',
+      '�💡 Подсказки:',
       '• Очереди выполняются последовательно',
       '• В логе показывается детальная информация о выполнении',
       '• При ошибках система продолжает работу с следующими задачами',
+      '• Неактивные очереди можно запускать вручную через бота',
     ].join('\n');
 
     return {

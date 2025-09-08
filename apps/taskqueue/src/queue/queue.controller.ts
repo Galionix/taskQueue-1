@@ -32,4 +32,14 @@ export class QueueController {
   remove(@Param('id') id: string) {
     return this.queueService.remove(+id);
   }
+
+  @Post(':id/toggle-activity')
+  toggleActivity(@Param('id') id: string) {
+    return this.queueService.toggleActivity(+id);
+  }
+
+  @Post(':id/set-activity')
+  setActivity(@Param('id') id: string, @Body() body: { isActive: boolean }) {
+    return this.queueService.setActivity(+id, body.isActive);
+  }
 }

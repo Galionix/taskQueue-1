@@ -13,7 +13,8 @@ export class QueueModel {
     public schedule: string,
     public lockStrategy:
       | (typeof ELockStrategy)[keyof typeof ELockStrategy]
-      | null
+      | null,
+    public isActive: boolean = true
   ) {}
 }
 
@@ -24,7 +25,8 @@ export class CreateQueueDtoModel {
     public schedule: string,
     public lockStrategy:
       | (typeof ELockStrategy)[keyof typeof ELockStrategy]
-      | null
+      | null,
+    public isActive: boolean = true
   ) {}
 }
 export class UpdateQueueDtoModel {
@@ -39,7 +41,8 @@ export class UpdateQueueDtoModel {
     public schedule?: string,
     public lockStrategy?:
       | (typeof ELockStrategy)[keyof typeof ELockStrategy]
-      | null
+      | null,
+    public isActive?: boolean
   ) {}
 }
 export interface IQueueService {
@@ -48,4 +51,6 @@ export interface IQueueService {
   findOne(id: number): Promise<string>;
   update(id: number, updateQueueDto: UpdateQueueDtoModel): Promise<QueueModel>;
   remove(id: number): Promise<void>;
+  toggleActivity?(id: number): Promise<QueueModel>;
+  setActivity?(id: number, isActive: boolean): Promise<QueueModel>;
 }

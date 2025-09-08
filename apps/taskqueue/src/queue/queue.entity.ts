@@ -23,7 +23,8 @@ export class QueueEntity extends QueueModel {
     createdAt: string,
     updatedAt: string,
     schedule: string,
-    lockStrategy: (typeof ELockStrategy)[keyof typeof ELockStrategy] | null
+    lockStrategy: (typeof ELockStrategy)[keyof typeof ELockStrategy] | null,
+    isActive: boolean = true
   ) {
     super(
       id,
@@ -34,7 +35,8 @@ export class QueueEntity extends QueueModel {
       createdAt,
       updatedAt,
       schedule,
-      lockStrategy
+      lockStrategy,
+      isActive
     );
   }
   @ApiProperty()
@@ -70,4 +72,8 @@ export class QueueEntity extends QueueModel {
   override lockStrategy!:
     | (typeof ELockStrategy)[keyof typeof ELockStrategy]
     | null;
+
+  @ApiProperty()
+  @Column({ type: 'boolean', default: true })
+  override isActive!: boolean;
 }
