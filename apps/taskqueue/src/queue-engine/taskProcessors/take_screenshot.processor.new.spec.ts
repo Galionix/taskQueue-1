@@ -22,15 +22,15 @@ describe('takeScreenshot processor', () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    
+
     // Отключаем переменные окружения для Telegram
     delete process.env.TELEGRAM_CHAT_ID;
     delete process.env.TELEGRAM_BOT_TOKEN;
-    
+
     // Мокаем execAsync через setExecAsync
     mockExecAsync = jest.fn().mockResolvedValue({ stdout: '', stderr: '' });
     setExecAsync(mockExecAsync);
-    
+
     processor = takeScreenshot();
     mockTask = {
       id: 1,
@@ -47,9 +47,9 @@ describe('takeScreenshot processor', () => {
       createdAt: '2023-01-01T00:00:00.000Z',
       updatedAt: '2023-01-01T00:00:00.000Z',
     } as TaskModel;
-    mockStorage = { 
+    mockStorage = {
       message: '',
-      screenshotFiles: []
+      screenshotFiles: [],
     };
 
     // Setup default mock implementations
