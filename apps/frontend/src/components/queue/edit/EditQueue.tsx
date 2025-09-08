@@ -15,7 +15,38 @@ export const EditQueue = ({ q }: { q: QueueModel }) => {
   const updateQueue = useUpdateQueue();
   const deleteQueue = useDeleteQueue();
   const toggleActivity = useToggleQueueActivity();
-  const [newData, setNewData] = useState<QueueModel>(q);
+
+  const [newData, setNewData] = useState<QueueModel>({
+    ...q,
+    tasks: Array.isArray(q.tasks) ? q.tasks : [],
+  });
+
+  // Debug: log the queue data to see what we're working with
+  console.log('EditQueue - Queue data:', {
+    id: q.id,
+    name: q.name,
+    tasks: q.tasks,
+    tasksType: typeof q.tasks,
+    tasksIsArray: Array.isArray(q.tasks),
+    tasksContent: q.tasks, // Detailed content
+    newDataTasks: newData.tasks, // What we're actually using
+  });
+
+  // Debug: check render conditions
+  console.log('Render conditions:', {
+    isArray: Array.isArray(newData.tasks),
+    length: newData.tasks.length,
+    shouldRenderCurrentTasks:
+      Array.isArray(newData.tasks) && newData.tasks.length > 0,
+  });
+
+  const shouldRenderCurrentTasks =
+    Array.isArray(newData.tasks) && newData.tasks.length > 0;
+  if (shouldRenderCurrentTasks) {
+    console.log('✅ Should render current tasks section');
+  } else {
+    console.log('❌ Will NOT render current tasks section');
+  }
 
   const updateKey =
     (key: keyof QueueModel) => (value: QueueModel[typeof key]) => {
@@ -123,15 +154,33 @@ export const EditQueue = ({ q }: { q: QueueModel }) => {
             )}
             <button
               onClick={() => {
-                if (confirm(`${q.isActive ? 'Deactivate' : 'Activate'} queue "${q.name}"?\n\n${q.isActive ? 'Queue will not run automatically by schedule.' : 'Queue will run automatically by schedule.'}`)) {
+                if (
+                  confirm(
+                    `${q.isActive ? 'Deactivate' : 'Activate'} queue "${
+                      q.name
+                    }"?\n\n${
+                      q.isActive
+                        ? 'Queue will not run automatically by schedule.'
+                        : 'Queue will run automatically by schedule.'
+                    }`
+                  )
+                ) {
                   toggleActivity.mutate(q.id);
                 }
               }}
-              className={`${s.quickButton} ${q.isActive ? s.activeButton : s.inactiveButton}`}
-              title={`${q.isActive ? 'Deactivate' : 'Activate'} automatic queue execution`}
+              className={`${s.quickButton} ${
+                q.isActive ? s.activeButton : s.inactiveButton
+              }`}
+              title={`${
+                q.isActive ? 'Deactivate' : 'Activate'
+              } automatic queue execution`}
               disabled={toggleActivity.isPending}
             >
-              {toggleActivity.isPending ? '⏳' : q.isActive ? '🔴 Deactivate' : '🟢 Activate'}
+              {toggleActivity.isPending
+                ? '⏳'
+                : q.isActive
+                ? '🔴 Deactivate'
+                : '🟢 Activate'}
             </button>
           </div>
         </div>
@@ -154,7 +203,10 @@ export const EditQueue = ({ q }: { q: QueueModel }) => {
           <button
             onClick={() => {
               setShowEdit(false);
-              setNewData(q); // Reset changes
+              setNewData({
+                ...q,
+                tasks: Array.isArray(q.tasks) ? q.tasks : [],
+              }); // Reset changes
             }}
             className={s.closeButton}
             title="Cancel"
@@ -187,7 +239,14 @@ export const EditQueue = ({ q }: { q: QueueModel }) => {
               <div className={s.sectionHeader}>🗂️ Current Tasks in Queue:</div>
               <div className={s.tasksGrid}>
                 {tasks
-                  ?.filter((task) => newData.tasks.includes(task.id))
+                  ?.filter((task) => {
+                    const taskInQueue = newData.tasks.includes(task.id);
+                    console.log(
+                      `Task ${task.name} (ID: ${task.id}) in queue:`,
+                      taskInQueue
+                    );
+                    return taskInQueue;
+                  })
                   .map((task) => (
                     <label
                       key={task.id}
@@ -229,7 +288,14 @@ export const EditQueue = ({ q }: { q: QueueModel }) => {
             <div className={s.sectionHeader}>➕ Available Tasks to Add:</div>
             <div className={s.tasksGrid}>
               {tasks
-                ?.filter((task) => !newData.tasks.includes(task.id))
+                ?.filter((task) => {
+                  const taskNotInQueue = !newData.tasks.includes(task.id);
+                  console.log(
+                    `Task ${task.name} (ID: ${task.id}) available to add:`,
+                    taskNotInQueue
+                  );
+                  return taskNotInQueue;
+                })
                 .map((task) => (
                   <label
                     key={task.id}

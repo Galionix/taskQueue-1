@@ -25,7 +25,9 @@ export const openBrowserTab = (): taskProcessorType => {
       }
       const pages = await browser.pages();
       // Check if the URL is already open in any tab
-      const existingTab = pages.find((page) => page.url() === payload.url);
+      const existingTab = pages.find((page) =>
+        page.url().includes(payload.url)
+      );
       // check if we have already opened a browser tab with this url
 
       if (existingTab) {

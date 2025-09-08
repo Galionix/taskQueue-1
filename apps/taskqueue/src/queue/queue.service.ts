@@ -40,7 +40,21 @@ export class QueueService implements IQueueService {
   };
 
   findAll: IQueueService['findAll'] = async () => {
-    return await this.queueRepository.find();
+    const queues = await this.queueRepository.find();
+    // Transform simple-array field to ensure it's always an array of numbers
+    return queues.map((queue) => ({
+      ...queue,
+      tasks: Array.isArray(queue.tasks)
+        ? queue.tasks.map((id) =>
+            typeof id === 'string' ? parseInt(id, 10) : id
+          )
+        : typeof queue.tasks === 'string'
+        ? queue.tasks
+            .split(',')
+            .filter(Boolean)
+            .map((id) => parseInt(id.trim(), 10))
+        : [],
+    }));
   };
 
   findOne: IQueueService['findOne'] = async (id: number) => {
