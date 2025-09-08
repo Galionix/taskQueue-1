@@ -11,7 +11,7 @@ import {
   DocumentationStats,
 } from '@tasks/lib';
 
-import { queueService, taskService, docsService } from './api';
+import { queueService, taskService, docsService, queueEngineService } from './api';
 import { UpdateResult } from 'typeorm';
 
 export const useTasks = () => {
@@ -298,5 +298,29 @@ export const useDocsStats = () => {
   return useQuery({
     queryKey: ['docs', 'stats'],
     queryFn: docsService.getDocumentationStats,
+  });
+};
+
+// Queue Engine hooks
+export const useExecuteQueueOnce = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    Awaited<ReturnType<typeof queueEngineService.executeQueueOnce>>,
+    Error,
+    number
+  >({
+    mutationFn: queueEngineService.executeQueueOnce,
+    onSuccess: (result, queueId) => {
+      // Invalidate queues after execution to refresh status
+      queryClient.invalidateQueries({ queryKey: ['queue'] });
+      console.log(`Queue ${queueId} execution completed:`, result);
+    },
+    onError: (error, queueId) => {
+      console.error(`Error executing queue ${queueId}:`, error);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['queue'] });
+    },
   });
 };

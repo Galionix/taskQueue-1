@@ -13,5 +13,14 @@ export class QueueEngineController {
 }
 */
 export interface IQueueEngineService {
-restart(): Promise<void>;
+  restart(): Promise<void>;
+  executeQueueOnce(queueId: number): Promise<{
+    success: boolean;
+    executionTime: number;
+    tasksExecuted: number;
+    tasksSuccessful: number;
+    tasksFailed: number;
+    log: string[];
+    error?: string;
+  }>;
 }

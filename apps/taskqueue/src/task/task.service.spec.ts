@@ -1,6 +1,6 @@
 import { Test, TestingModule } from '@nestjs/testing';
+import { TaskService } from './task.service';
 
-import { TaskService } from '../../../../lib/src/service/task.service';
 
 describe('TaskService', () => {
   let service: TaskService;

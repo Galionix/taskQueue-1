@@ -4,7 +4,7 @@ import { QueueModule } from '../queue/queue.module';
 import { TaskModule } from '../task/task.module';
 
 // Services
-import { TelegramApiService, TelegramService, StatusService } from './services';
+import { TelegramApiService, TelegramService, StatusService, TelegramQueueService } from './services';
 
 // Controllers
 import { TelegramController } from './controllers';
@@ -20,6 +20,7 @@ import { CommandHandler, AuthHandler } from './handlers';
     TelegramApiService,
     TelegramService,
     StatusService,
+    TelegramQueueService,
     // Handlers
     CommandHandler,
     AuthHandler,
@@ -27,6 +28,7 @@ import { CommandHandler, AuthHandler } from './handlers';
   exports: [
     TelegramService,
     TelegramApiService,
+    TelegramQueueService,
   ],
 })
 export class TelegramModule {}

@@ -7,6 +7,7 @@ import {
 import { TelegramUpdateDto, TelegramCallbackQueryDto } from '../dto';
 import { TelegramApiService } from './telegram-api.service';
 import { StatusService } from './status.service';
+import { TelegramQueueService } from './telegram-queue.service';
 import { CommandHandler, AuthHandler } from '../handlers';
 import { KeyboardUtils, MessageFormatter } from '../utils';
 
@@ -19,6 +20,7 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
   constructor(
     private readonly telegramApiService: TelegramApiService,
     private readonly statusService: StatusService,
+    private readonly telegramQueueService: TelegramQueueService,
     private readonly commandHandler: CommandHandler,
     private readonly authHandler: AuthHandler
   ) {}
@@ -136,7 +138,9 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
   private async handleMessage(text: string, chatId: string): Promise<void> {
     if (text === '/start' || text === '/menu') {
       await this.telegramApiService.sendMessage(chatId, MessageFormatter.formatWelcomeMessage());
-      await this.telegramApiService.sendTaskControlMenu(chatId, KeyboardUtils.createControlKeyboard());
+      await this.telegramApiService.sendTaskControlMenu(chatId, KeyboardUtils.createMainMenuKeyboardV2());
+    } else if (text === '/queues') {
+      await this.showQueuesMenu(chatId);
     } else if (text === '/status') {
       await this.sendSystemStatus(chatId);
     } else if (text === '/help') {
@@ -147,10 +151,10 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
       await this.telegramApiService.sendMessage(
         chatId,
         '🤖 Используйте команды:\n' +
-          '• /menu - панель управления\n' +
+          '• /menu - главное меню\n' +
+          '• /queues - управление очередями\n' +
           '• /status - статус системы\n' +
-          '• /help - справка\n' +
-          '• /security - безопасность'
+          '• /help - помощь'
       );
     }
   }
@@ -170,6 +174,30 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
     );
 
     try {
+      // Специальная обработка для команд навигации
+      if (data === 'queues_menu') {
+        await this.showQueuesMenu(chatId);
+        await this.telegramApiService.answerCallbackQuery(callbackQuery.id, '📋 Меню очередей');
+        return;
+      }
+
+      if (data === 'main_menu') {
+        await this.telegramApiService.sendMessage(
+          chatId,
+          '🏠 Главное меню',
+          KeyboardUtils.createMainMenuKeyboardV2()
+        );
+        await this.telegramApiService.answerCallbackQuery(callbackQuery.id, '🏠 Главное меню');
+        return;
+      }
+
+      if (data === 'list_queues') {
+        await this.showQueueList(chatId);
+        await this.telegramApiService.answerCallbackQuery(callbackQuery.id, '📋 Список очередей');
+        return;
+      }
+
+      // Обычная обработка команд
       const result = await this.commandHandler.executeCommand(data);
 
       // Отвечаем на callback
@@ -178,16 +206,14 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
         result.success ? '✅ Выполнено' : '❌ Ошибка'
       );
 
-      // Обновляем сообщение с результатом
-      if (message) {
-        const statusText = await this.statusService.getFormattedStatus();
-        await this.telegramApiService.editMessageText(
-          chatId,
-          message.message_id,
-          `🎛️ <b>Task Queue Control Panel</b>\n\n${statusText}\n\n<i>Последняя команда: ${data}</i>\n<i>Результат: ${result.message}</i>`,
-          KeyboardUtils.createControlKeyboard()
-        );
+      // Отправляем результат как новое сообщение
+      await this.telegramApiService.sendMessage(chatId, result.message);
+
+      // Для команд выполнения очередей показываем обновленный список
+      if (data.startsWith('execute_queue_')) {
+        setTimeout(() => this.showQueueList(chatId), 1000);
       }
+
     } catch (error) {
       await this.telegramApiService.answerCallbackQuery(callbackQuery.id, '❌ Ошибка выполнения');
       this.logger.error('Error executing command:', error);
@@ -236,6 +262,70 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
       await this.telegramApiService.sendTaskControlMenu(chatId, KeyboardUtils.createControlKeyboard());
     } else {
       await this.telegramApiService.sendMessage(chatId, message);
+    }
+  }
+
+  /**
+   * Show queues management menu
+   */
+  private async showQueuesMenu(chatId: string): Promise<void> {
+    await this.telegramApiService.sendMessage(
+      chatId,
+      '📋 Управление очередями\n\nВыберите действие:',
+      KeyboardUtils.createQueuesKeyboard()
+    );
+  }
+
+  /**
+   * Show list of queues with action buttons
+   */
+  private async showQueueList(chatId: string): Promise<void> {
+    try {
+      const queues = await this.telegramQueueService.getQueuesList();
+      
+      if (queues.length === 0) {
+        await this.telegramApiService.sendMessage(
+          chatId,
+          '📋 Очереди не найдены\n\nВозможно, они еще не созданы.'
+        );
+        return;
+      }
+
+      const message = [
+        `📋 Доступные очереди (${queues.length}):`,
+        '',
+        ...queues.map((queue, index) => 
+          `${index + 1}. **${queue.name}** (ID: ${queue.id})\n` +
+          `   📊 Статус: ${this.getStateEmojiForService(queue.state)} ${queue.state}\n` +
+          `   🔢 Задач: ${queue.taskCount}\n` +
+          `   ⏰ Расписание: ${queue.schedule}`
+        ),
+        '',
+        '🚀 Нажмите кнопку для запуска очереди',
+        '📊 Или получите детальный статус'
+      ].join('\n');
+
+      // Создаем клавиатуру с кнопками для каждой очереди
+      const keyboard = KeyboardUtils.createQueueListKeyboard(
+        queues.map(q => ({ id: q.id, name: q.name }))
+      );
+
+      await this.telegramApiService.sendMessage(chatId, message, keyboard);
+    } catch (error) {
+      this.logger.error('Error showing queue list:', error);
+      await this.telegramApiService.sendMessage(
+        chatId,
+        '❌ Ошибка при получении списка очередей'
+      );
+    }
+  }
+
+  private getStateEmojiForService(state: any): string {
+    switch (String(state)) {
+      case 'running': return '🟢';
+      case 'paused': return '🟡';
+      case 'stopped': return '🔴';
+      default: return '⚪';
     }
   }
 

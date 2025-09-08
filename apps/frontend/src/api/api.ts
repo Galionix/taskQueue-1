@@ -111,6 +111,12 @@ export const queueEngineService: Omit<IQueueEngineService, 'queueRepository'> =
       >('/queue-engine/restart');
       return response.data;
     },
+    executeQueueOnce: async (queueId) => {
+      const response = await axiosInstance.post<
+        ReturnType<IQueueEngineService['executeQueueOnce']>
+      >(`/queue-engine/execute/${queueId}`);
+      return response.data;
+    },
   };
 
 export const docsService: IDocsService = {

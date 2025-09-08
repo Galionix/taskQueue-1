@@ -1,4 +1,4 @@
-import { Controller, Post } from '@nestjs/common';
+import { Controller, Post, Param } from '@nestjs/common';
 
 import { QueueEngineService } from './queue-engine.service';
 
@@ -6,11 +6,17 @@ import { QueueEngineService } from './queue-engine.service';
 export class QueueEngineController {
   constructor(private readonly queueEngineService: QueueEngineService) { }
 
-
-  // restart queueEngine() {
-
   @Post('restart')
   async restartQueueEngine() {
     await this.queueEngineService.restart();
+  }
+
+  @Post('execute/:queueId')
+  async executeQueueOnce(@Param('queueId') queueId: string) {
+    const id = parseInt(queueId, 10);
+    if (isNaN(id)) {
+      throw new Error('Invalid queue ID');
+    }
+    return await this.queueEngineService.executeQueueOnce(id);
   }
 }

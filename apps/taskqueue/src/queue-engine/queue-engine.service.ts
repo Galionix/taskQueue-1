@@ -199,5 +199,116 @@ export class QueueEngineService implements OnModuleInit, IQueueEngineService {
     // }
     await processor.execute(task, storage);
   }
+
+  /**
+   * Execute all tasks of a queue once (not on schedule)
+   */
+  async executeQueueOnce(queueId: number): Promise<{
+    success: boolean;
+    executionTime: number;
+    tasksExecuted: number;
+    tasksSuccessful: number;
+    tasksFailed: number;
+    log: string[];
+    error?: string;
+  }> {
+    const startTime = Date.now();
+    const log: string[] = [];
+    
+    try {
+      // Get queue data
+      const queues = await this.queueRepository.findAll();
+      const queue = queues.find(q => q.id === queueId);
+      
+      if (!queue) {
+        throw new Error(`Queue with ID ${queueId} not found`);
+      }
+
+      log.push(`Starting execution of queue: ${queue.name} (ID: ${queueId})`);
+      
+      if (!queue.tasks || queue.tasks.length === 0) {
+        log.push('No tasks found in queue');
+        return {
+          success: true,
+          executionTime: Date.now() - startTime,
+          tasksExecuted: 0,
+          tasksSuccessful: 0,
+          tasksFailed: 0,
+          log
+        };
+      }
+
+      // Get task entities
+      const unorderedTasks = await this.taskRepository.findByIds(queue.tasks);
+      const tasks = queue.tasks.map((taskId) => {
+        const task = unorderedTasks.find((t) => t.id == taskId);
+        if (!task) {
+          log.push(`Warning: Task with ID ${taskId} not found`);
+        }
+        return task!;
+      }).filter(Boolean);
+
+      log.push(`Found ${tasks.length} tasks to execute`);
+
+      // Create temporary storage for this execution (ensure clean start)
+      const storage = { message: '' };
+      
+      let successfulTasks = 0;
+      let failedTasks = 0;
+
+      // Process tasks one by one
+      for (const task of tasks) {
+        log.push(`Processing task: ${task.name} (ID: ${task.id})`);
+        try {
+          await this.processTask(task, storage);
+          successfulTasks++;
+          log.push(`✅ Task ${task.name} completed successfully`);
+          
+          // Add task output from storage to log
+          if (storage.message && storage.message.trim()) {
+            const taskMessages = storage.message.trim().split('\n').filter(msg => msg.trim());
+            taskMessages.forEach(msg => log.push(`   ${msg.trim()}`));
+            // Clear the storage message for next task
+            storage.message = '';
+          }
+        } catch (error) {
+          failedTasks++;
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          log.push(`❌ Task ${task.name} failed: ${errorMessage}`);
+          Logger.error(`Error processing task ${task.id}:`, error);
+          // Clear the storage message even on error
+          storage.message = '';
+        }
+      }
+
+      const executionTime = Date.now() - startTime;
+      log.push(`Execution completed. Success: ${successfulTasks}, Failed: ${failedTasks}, Time: ${executionTime}ms`);
+
+      return {
+        success: failedTasks === 0,
+        executionTime,
+        tasksExecuted: successfulTasks + failedTasks,
+        tasksSuccessful: successfulTasks,
+        tasksFailed: failedTasks,
+        log
+      };
+
+    } catch (error) {
+      const executionTime = Date.now() - startTime;
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      log.push(`Fatal error: ${errorMessage}`);
+      Logger.error(`Error executing queue ${queueId}:`, error);
+
+      return {
+        success: false,
+        executionTime,
+        tasksExecuted: 0,
+        tasksSuccessful: 0,
+        tasksFailed: 0,
+        log,
+        error: errorMessage
+      };
+    }
+  }
   // blocked = false;
 }

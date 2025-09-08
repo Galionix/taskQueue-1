@@ -5,7 +5,7 @@
   "scripts": {
     "dev:frontend": "npx nx run @tasks/frontend:dev",
     "dev:backend": "npx nx run @tasks/taskqueue:serve --configuration=development",
-    "test": "npx ts-node test-runner.ts"
+    "test": "npx nx test taskqueue"
   },
   "private": true,
   "dependencies": {
