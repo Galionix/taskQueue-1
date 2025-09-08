@@ -6,6 +6,7 @@ import { TaskEntity } from '../../task/task.entity';
 import { findOnPageElements } from './find_on_page_elements.processor';
 import { notifyWithMessageFromStore } from './notify_with_message_from_store.processor';
 import { openBrowserTab } from './open_browser_tab.processor';
+import { takeScreenshot } from './take_screenshot.processor';
 
 export enum EResourceType {
   browser = 'browser',
@@ -39,6 +40,7 @@ export class TaskProcessors {
     find_on_page_elements: findOnPageElements(),
     open_browser_tab: openBrowserTab(),
     notify_with_message_from_store: notifyWithMessageFromStore(),
+    take_screenshot: takeScreenshot(),
   };
 
   public getProcessor(

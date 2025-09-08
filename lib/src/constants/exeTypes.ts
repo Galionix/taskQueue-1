@@ -2,6 +2,7 @@ export enum ExeTypes {
   'find_on_page_elements',
   'open_browser_tab',
   'notify_with_message_from_store',
+  'take_screenshot',
 }
 
 // this should be manually copied to apps\frontend\src\api\types.ts
@@ -21,5 +22,11 @@ export const ExeTypesPayloadMap = {
     priority: 1,
     sendIfEmpty: false, // if true, will send notification even if storage.message is empty
     message: 'No message found in storage',
+  },
+  [ExeTypes.take_screenshot]: {
+    outputPath: 'C:\\screenshots\\',
+    filename: 'screenshot_{timestamp}.png',
+    allScreens: true,
+    sendNotification: true, // if true, will add screenshot info to storage.message
   },
 };
