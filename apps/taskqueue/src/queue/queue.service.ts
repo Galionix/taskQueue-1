@@ -96,8 +96,10 @@ export class QueueService implements IQueueService {
     if (queue.tasks) {
       await this.taskService.removeQueueFromTasks(queue.tasks);
     }
-    // Delete the QueueController
+    // Delete the Queue
     await this.queueRepository.delete({ id });
+    
+    Logger.log(`Queue ${id} successfully deleted`);
   };
 
   findActive = async () => {

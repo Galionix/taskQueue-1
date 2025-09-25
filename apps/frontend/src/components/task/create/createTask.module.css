@@ -46,7 +46,7 @@
     padding-bottom: 15px;
     border-bottom: 1px solid #e2e8f0;
   }
-  
+
   .header h3 {
     font-size: 1.4rem;
     font-weight: 600;
@@ -54,7 +54,7 @@
     margin: 0;
     cursor: pointer;
   }
-  
+
   .closeButton {
     background: #e2e8f0;
     color: #4a5568;
@@ -65,29 +65,29 @@
     cursor: pointer;
     transition: all 0.2s ease;
   }
-  
+
   .closeButton:hover {
     background: #cbd5e0;
   }
-  
+
   .form {
     display: flex;
     flex-direction: column;
     gap: 20px;
   }
-  
+
   .formGroup {
     display: flex;
     flex-direction: column;
     gap: 8px;
   }
-  
+
   .formLabel {
     font-weight: 500;
     color: #2d3748;
     font-size: 0.95rem;
   }
-  
+
   .formInput,
   .formSelect,
   .formTextarea {
@@ -98,7 +98,7 @@
     transition: all 0.2s ease;
     background: white;
   }
-  
+
   .formInput:focus,
   .formSelect:focus,
   .formTextarea:focus {
@@ -106,24 +106,24 @@
     border-color: #667eea;
     box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
   }
-  
+
   .formTextarea {
     min-height: 120px;
     resize: vertical;
     font-family: 'Monaco', 'Menlo', monospace;
     font-size: 0.85rem;
   }
-  
+
   .dependenciesList {
     margin-top: 10px;
   }
-  
+
   .dependenciesGrid {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 10px;
   }
-  
+
   .dependencyCheckbox {
     display: flex;
     align-items: center;
@@ -136,24 +136,24 @@
     transition: all 0.2s ease;
     font-size: 0.9rem;
   }
-  
+
   .dependencyCheckbox:hover {
     background: #edf2f7;
     border-color: #cbd5e0;
   }
-  
+
   .dependencyCheckbox input[type="checkbox"] {
     margin: 0;
     width: 16px;
     height: 16px;
   }
-  
+
   .dependencyCheckbox.checked {
     background: #ebf8ff;
     border-color: #667eea;
     color: #2b6cb0;
   }
-  
+
   .submitButton {
     background: linear-gradient(135deg, #667eea, #764ba2);
     color: white;
@@ -177,4 +177,68 @@
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
+}
+
+
+.payloadInfoToggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px 12px;
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  text-align: left;
+  transition: all 0.2s ease;
+  margin-bottom: 4px;
+}
+
+.payloadInfoToggle:hover {
+  background: #edf2f7;
+  border-color: #cbd5e0;
+}
+
+.payloadInfoIcon {
+  font-size: 0.8rem;
+  color: #4a5568;
+  transition: transform 0.2s ease;
+  min-width: 12px;
+}
+
+.payloadInfoTitle {
+  font-weight: 500;
+  color: #2d3748;
+  flex: 1;
+}
+
+.payloadInfoContent {
+  padding: 0 12px;
+  background: #f7fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+  margin-bottom: 4px;
+  max-height: 0;
+  opacity: 0;
+  transition: max-height 0.3s ease, opacity 0.3s ease, padding 0.3s ease;
+}
+
+.payloadInfoContent.expanded {
+  max-height: 300px;
+  opacity: 1;
+  padding: 12px;
+}
+
+.payloadInfoText {
+  margin: 0;
+  font-family: 'Monaco', 'Menlo', 'Consolas', monospace;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: #4a5568;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }

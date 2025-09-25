@@ -25,3 +25,33 @@ export const ExeTypesPayloadMap = {
     sendNotification: true, // if true, will add screenshot info to storage.message
   },
 };
+
+export const ExeTypesDescriptionMap = {
+  [ExeTypes.find_on_page_elements]: {
+    name: 'Find On Page Elements',
+    usage: `
+url: string - The URL of the page to search. This is used to search for in already opened tabs first. So the needed tab, if its already opened - should include this url. Otherwise, opens new.
+queryToCount: string - The CSS selector to find elements on the page. Counts the number of elements matching this selector is default behavior.
+extractText: boolean - If true, extracts text content from the found elements. If false, just counts the number of elements found.
+    `
+  },
+  [ExeTypes.notify_with_message_from_store]: {
+    name: 'Notify With Message From Storage',
+    usage: `
+device: string - The device name to send the notification to. This should match the device name registered in Pushover.
+title: string - The title of the notification.
+sound: string - The sound to play when the notification is received. Should be one of the sounds supported by Pushover.
+priority: number - The priority of the notification. Ranges from -2 (lowest) to 2 (highest).
+sendIfEmpty: boolean - If true, sends the notification even if storage.message is empty. If false, only sends if there is a message.
+message: string - The default message to send if storage.message is empty and sendIfEmpty is true.
+    `
+  },
+  [ExeTypes.take_screenshot]: {
+    name: 'Take Screenshot',
+    usage: `
+outputPath: string - The directory where the screenshot will be saved.
+filename: string - The filename for the screenshot. Can include {timestamp} placeholder.
+sendNotification: boolean - If true, sends a notification with the screenshot.
+    `
+  },
+};
