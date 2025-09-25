@@ -10,6 +10,7 @@ export const ExeTypesPayloadMap = {
     url: 'google.com',
     queryToCount: '#ai-helper-widget',
     extractText: true, // if true, will extract text from the element
+    templateString: 'Found {count} elements for selector {queryToCount} on {url}.', // {count}, {queryToCount}, {url}
   },
   [ExeTypes.notify_with_message_from_store]: {
     device: 'pocof6pro',
@@ -33,6 +34,7 @@ export const ExeTypesDescriptionMap = {
 url: string - The URL of the page to search. This is used to search for in already opened tabs first. So the needed tab, if its already opened - should include this url. Otherwise, opens new.
 queryToCount: string - The CSS selector to find elements on the page. Counts the number of elements matching this selector is default behavior.
 extractText: boolean - If true, extracts text content from the found elements. If false, just counts the number of elements found.
+templateString: string - A template string to format the output message. Supports placeholders: {count}, {queryToCount}, {url}, if extractText is true - {texts} (comma separated texts from found elements).
     `
   },
   [ExeTypes.notify_with_message_from_store]: {

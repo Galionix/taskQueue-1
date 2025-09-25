@@ -89,6 +89,14 @@ export class KeyboardUtils {
         },
       ]);
 
+      // Ряд с debug запуском  
+      buttons.push([
+        {
+          text: `🔍 Debug ${queue.name}`,
+          callback_data: `execute_queue_debug_${queue.id}`,
+        },
+      ]);
+
       // Ряд с управлением активностью
       const activityButtonText =
         queue.isActive !== undefined

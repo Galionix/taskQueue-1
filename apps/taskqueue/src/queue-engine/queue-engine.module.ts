@@ -9,10 +9,11 @@ import { QueueEngineController } from './queue-engine.controller';
 import { QueueEngineService } from './queue-engine.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([TaskEntity, QueueEntity])],
-  // No need to import TypeOrmModule here, as QueueEngineService does not use it
+  imports: [
+    TypeOrmModule.forFeature([TaskEntity, QueueEntity])
+  ],
   controllers: [QueueEngineController],
   providers: [QueueEngineService, QueueService, TaskService],
-  exports: [QueueEngineService], // Экспортируем сервис для использования в других модулях
+  exports: [QueueEngineService], // Экспортируем сервис для использования в других модуля
 })
 export class QueueEngineModule {}

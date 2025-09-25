@@ -22,6 +22,8 @@ export class QueueEngineService implements OnModuleInit, IQueueEngineService {
     };
   } = {};
   private browser: Browser | null = null;
+  private notificationCallback: ((message: string) => void) | null = null;
+
   constructor(
     private readonly queueRepository: QueueService,
     private readonly taskRepository: TaskService
@@ -66,34 +68,82 @@ export class QueueEngineService implements OnModuleInit, IQueueEngineService {
     );
     const job = new cron.CronJob(cronString, async () => {
       Logger.log(`Cron job triggered for queue: ${queue.id}`);
-      // Logger.log('this.schedules: ', this.schedules);
-      const schedule = this.schedules[queue.id];
-      if (!schedule) return;
+      const startTime = Date.now();
+      let successfulTasks = 0;
+      let failedTasks = 0;
+      const cleanMessages: string[] = [];
 
-      const { tasks } = schedule;
-      if (tasks.length === 0) {
-        Logger.warn(`No tasks found for queue: ${queue.id}`);
-        return;
-      }
+      try {
+        const schedule = this.schedules[queue.id];
+        if (!schedule) return;
 
-      // process tasks one by one in sequence, awaiting each task to finish before starting the next one
-      for (const task of tasks) {
-        Logger.log(`Processing task: ${task.id} for queue: ${queue.id}`);
-        try {
-          await this.processTask(task, schedule.storage);
-          Logger.log(`Task ${task.id} processed successfully.`);
-        } catch (error) {
-          // free all task resources
-          // const processor = taskProcessors.getProcessor(task.exeType);
-          // if (processor && processor.blocks) {
-          //   for (const block of processor.blocks) {
-          //     taskProcessors.removeBlockedResource(block);
-          //   }
-          // }
+        const { tasks } = schedule;
+        if (tasks.length === 0) {
+          Logger.warn(`No tasks found for queue: ${queue.id}`);
+          return;
+        }
 
-          // this.blocked = false;
-          // Logger.log(`Task ${task.id} is no longer blocked.`);
-          Logger.error(`Error processing task ${task.id}:`, error);
+        // Create temporary storage for this execution (ensure clean start)
+        const storage = { message: '' };
+
+        // process tasks one by one in sequence, awaiting each task to finish before starting the next one
+        for (const task of tasks) {
+          Logger.log(`Processing task: ${task.id} for queue: ${queue.id}`);
+          try {
+            await this.processTask(task, storage);
+            successfulTasks++;
+            Logger.log(`Task ${task.id} processed successfully.`);
+
+            // Collect clean messages from task output
+            if (storage.message && storage.message.trim()) {
+              const taskMessages = storage.message
+                .trim()
+                .split('\n')
+                .filter((msg) => msg.trim());
+              taskMessages.forEach((msg) => {
+                cleanMessages.push(msg.trim());
+              });
+              // Clear the storage message for next task
+              storage.message = '';
+            }
+          } catch (error) {
+            failedTasks++;
+            Logger.error(`Error processing task ${task.id}:`, error);
+            // Clear the storage message even on error
+            storage.message = '';
+          }
+        }
+
+        // Send notification about cron execution result
+        if (this.notificationCallback) {
+          const executionTime = Date.now() - startTime;
+          const queueName = queue.name || `Queue ${queue.id}`;
+          
+          let message: string;
+          if (cleanMessages.length > 0) {
+            const cleanOutput = cleanMessages.join('\n');
+            message = failedTasks === 0 
+              ? `⏰ ${queueName}: ${cleanOutput}`
+              : `⚠️ ${queueName}: ${cleanOutput} (${failedTasks} failed)`;
+          } else {
+            message = failedTasks === 0
+              ? `⏰ Cron: Queue "${queueName}" completed successfully (${successfulTasks} tasks, ${executionTime}ms)`
+              : `⚠️ Cron: Queue "${queueName}" completed with errors (${successfulTasks} success, ${failedTasks} failed, ${executionTime}ms)`;
+          }
+
+          this.notificationCallback(message);
+        }
+
+      } catch (error) {
+        Logger.error(`Critical error in cron job for queue ${queue.id}:`, error);
+        
+        // Send error notification
+        if (this.notificationCallback) {
+          const queueName = queue.name || `Queue ${queue.id}`;
+          const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+          this.notificationCallback(
+            `❌ Cron: Queue "${queueName}" failed: ${errorMessage}`
+          );
         }
       }
     });
@@ -215,6 +265,7 @@ export class QueueEngineService implements OnModuleInit, IQueueEngineService {
     tasksSuccessful: number;
     tasksFailed: number;
     log: string[];
+    cleanMessages: string[]; // Clean messages from task processors
     error?: string;
   }> {
     const startTime = Date.now();
@@ -240,6 +291,7 @@ export class QueueEngineService implements OnModuleInit, IQueueEngineService {
           tasksSuccessful: 0,
           tasksFailed: 0,
           log,
+          cleanMessages: [],
         };
       }
 
@@ -251,14 +303,15 @@ export class QueueEngineService implements OnModuleInit, IQueueEngineService {
           if (!task) {
             log.push(`Warning: Task with ID ${taskId} not found`);
           }
-          return task!;
+          return task;
         })
-        .filter(Boolean);
+        .filter(Boolean) as TaskModel[];
 
       log.push(`Found ${tasks.length} tasks to execute`);
 
       // Create temporary storage for this execution (ensure clean start)
       const storage = { message: '' };
+      const cleanMessages: string[] = [];
 
       let successfulTasks = 0;
       let failedTasks = 0;
@@ -271,13 +324,16 @@ export class QueueEngineService implements OnModuleInit, IQueueEngineService {
           successfulTasks++;
           log.push(`✅ Task ${task.name} completed successfully`);
 
-          // Add task output from storage to log
+          // Add task output from storage to log and collect clean messages
           if (storage.message && storage.message.trim()) {
             const taskMessages = storage.message
               .trim()
               .split('\n')
               .filter((msg) => msg.trim());
-            taskMessages.forEach((msg) => log.push(`   ${msg.trim()}`));
+            taskMessages.forEach((msg) => {
+              log.push(`   ${msg.trim()}`);
+              cleanMessages.push(msg.trim()); // Collect clean messages separately
+            });
             // Clear the storage message for next task
             storage.message = '';
           }
@@ -304,6 +360,7 @@ export class QueueEngineService implements OnModuleInit, IQueueEngineService {
         tasksSuccessful: successfulTasks,
         tasksFailed: failedTasks,
         log,
+        cleanMessages,
       };
     } catch (error) {
       const executionTime = Date.now() - startTime;
@@ -319,9 +376,17 @@ export class QueueEngineService implements OnModuleInit, IQueueEngineService {
         tasksSuccessful: 0,
         tasksFailed: 0,
         log,
+        cleanMessages: [],
         error: errorMessage,
       };
     }
+  }
+
+  /**
+   * Set notification callback for cron job results
+   */
+  setNotificationCallback(callback: (message: string) => void): void {
+    this.notificationCallback = callback;
   }
   // blocked = false;
 }

@@ -19,6 +19,7 @@ export const findOnPageElements = (): taskProcessorType => {
         throw new Error('Browser instance is not available');
       }
       const payload = JSON.parse(data.payload) as typeof payloadType;
+      const templateString = payload.templateString || '';
       // we assume currently we have an opened correct tab, but just in case we will check it
       const pages = await browser.pages();
       let currentPage = pages.find((page) => page.url() === payload.url);
@@ -45,6 +46,7 @@ export const findOnPageElements = (): taskProcessorType => {
         console.warn(`No elements found for selector: ${payload.queryToCount}`);
       } else {
         if (payload.extractText) {
+          // templateString: string - A template string to format the output message. Supports placeholders: {count}, {queryToCount}, {url}, if extractText is true - {texts} (comma separated texts from found elements).
           // Extract text from each element if extractText is true
           const texts: string[] = await Promise.all(
             elements.map((el) => el.evaluate((node) => node.textContent))
@@ -57,12 +59,23 @@ export const findOnPageElements = (): taskProcessorType => {
               elements: [],
             };
           }
-          storage.message += `\n${payload.url} has text for selector: ${
-            payload.queryToCount
-          }: ${texts.join(', ').trim()}`;
+          const formattedMessage = templateString
+            .replace('{count}', elements.length.toString())
+            .replace('{queryToCount}', payload.queryToCount)
+            .replace('{url}', payload.url)
+            .replace('{texts}', texts.length > 1 ? texts.join(', ').trim() : texts[0].trim());
+          storage.message += `\n${formattedMessage}`;
+          // console.log(
+          //   `Extracted text from ${elements.length} elements for selector: ${payload.queryToCount}`
+          // );
         } else {
           // Just count the elements
-          storage.message += `\nFound ${elements.length} elements for selector: ${payload.queryToCount} on page ${payload.url}`;
+          // storage.message += `\nFound ${elements.length} elements for selector: ${payload.queryToCount} on page ${payload.url}`;
+          const formattedMessage = templateString
+            .replace('{count}', elements.length.toString())
+            .replace('{queryToCount}', payload.queryToCount)
+            .replace('{url}', payload.url);
+          storage.message += `\n${formattedMessage}`;
         }
         console.log(
           `Found ${elements.length} elements for selector: ${payload.queryToCount}`

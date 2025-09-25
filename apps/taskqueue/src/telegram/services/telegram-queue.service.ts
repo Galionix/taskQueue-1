@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { QueueService } from '../../queue/queue.service';
 import { QueueEngineService } from '../../queue-engine/queue-engine.service';
 import { ETaskState } from '@tasks/lib';
+import { CronUtils } from '../utils/cron.utils';
 
 export interface QueueExecutionResult {
   success: boolean;
@@ -9,6 +10,7 @@ export interface QueueExecutionResult {
   queueName: string;
   executionTime: number;
   log: string[];
+  cleanMessages: string[]; // Clean messages from task processors
   tasksExecuted: number;
   tasksSuccessful: number;
   tasksFailed: number;
@@ -99,6 +101,7 @@ export class TelegramQueueService {
         queueName: targetQueue.name,
         executionTime: engineResult.executionTime,
         log: formattedLog,
+        cleanMessages: engineResult.cleanMessages,
         tasksExecuted: engineResult.tasksExecuted,
         tasksSuccessful: engineResult.tasksSuccessful,
         tasksFailed: engineResult.tasksFailed,
@@ -120,6 +123,7 @@ export class TelegramQueueService {
         queueName: 'Unknown Queue',
         executionTime: 0,
         log: errorLog,
+        cleanMessages: [],
         tasksExecuted: 0,
         tasksSuccessful: 0,
         tasksFailed: 0,
@@ -148,7 +152,7 @@ export class TelegramQueueService {
         `${stateEmoji} Status: ${stateText}`,
         `${activityEmoji} Activity: ${activityText}`,
         `📊 Tasks: ${queue.tasks?.length || 0}`,
-        `⏰ Schedule: ${queue.schedule}`,
+        `⏰ Schedule: ${CronUtils.toHumanReadable(queue.schedule)}`,
       ].join('\n');
 
     } catch (error: unknown) {
@@ -179,7 +183,7 @@ export class TelegramQueueService {
       }
 
       // Переключаем активность через QueueService
-      const updatedQueue = await this.queueService.toggleActivity!(queueId);
+      const updatedQueue = await this.queueService.toggleActivity(queueId);
 
       const statusText = updatedQueue.isActive
         ? 'активирована'
@@ -193,7 +197,7 @@ export class TelegramQueueService {
           ? '✅ Очередь будет выполняться по расписанию'
           : '⏸️ Очередь НЕ будет выполняться по расписанию',
         `📋 Ручное выполнение через бота остается доступным`,
-        `⏰ Расписание: ${updatedQueue.schedule}`,
+        `⏰ Расписание: ${CronUtils.toHumanReadable(updatedQueue.schedule)}`,
       ].join('\n');
 
       this.logger.log(`✅ Queue ${queueId} activity toggled to: ${updatedQueue.isActive}`);

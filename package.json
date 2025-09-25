@@ -5,6 +5,7 @@
   "scripts": {
     "dev:frontend": "npx nx run @tasks/frontend:dev",
     "dev:backend": "npx nx run @tasks/taskqueue:serve --configuration=development",
+    "build:lib": "npx nx run @tasks/lib:build",
     "test": "npx nx test taskqueue",
     "typecheck": "npm run typecheck:taskqueue && npm run typecheck:frontend && npm run typecheck:lib",
     "typecheck:taskqueue": "npx tsc --noEmit --project apps/taskqueue/tsconfig.app.json",

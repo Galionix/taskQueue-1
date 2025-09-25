@@ -2,6 +2,7 @@ import { Injectable, Logger } from '@nestjs/common';
 import { QueueEngineService } from '../../queue-engine/queue-engine.service';
 import { TelegramQueueService } from '../services/telegram-queue.service';
 import { ETaskState } from '@tasks/lib';
+import { CronUtils } from '../utils';
 
 export interface CommandResult {
   success: boolean;
@@ -73,6 +74,16 @@ export class CommandHandler {
         break;
 
       default:
+        // Проверяем, не является ли это командой запуска конкретной очереди с дебагом
+        if (command.startsWith('execute_queue_debug_')) {
+          const queueIdStr = command.replace('execute_queue_debug_', '');
+          const queueId = parseInt(queueIdStr, 10);
+          if (!isNaN(queueId)) {
+            result = await this.executeQueueDebug(queueId);
+            break;
+          }
+        }
+
         // Проверяем, не является ли это командой запуска конкретной очереди
         if (command.startsWith('execute_queue_')) {
           const queueIdStr = command.replace('execute_queue_', '');
@@ -190,7 +201,7 @@ export class CommandHandler {
                `   📊 Статус: ${this.getStateEmoji(queue.state)} ${queue.state}\n` +
                `   ${activeEmoji} Активность: ${activeText}\n` +
                `   🔢 Задач: ${queue.taskCount}\n` +
-               `   ⏰ Расписание: ${queue.schedule}\n`;
+               `   ⏰ Расписание: ${CronUtils.toHumanReadable(queue.schedule)}\n`;
       }).join('\n');
 
       const helpText = '\n💡 Управление:\n' +
@@ -219,12 +230,44 @@ export class CommandHandler {
 
       const result = await this.telegramQueueService.executeQueueOnce(queueId);
 
-      // Форматируем лог для Telegram (ограничиваем размер)
+      // Simple mode: just show clean messages from task processors
+      if (result.cleanMessages.length > 0) {
+        const cleanOutput = result.cleanMessages.join('\n');
+        const message = result.success
+          ? `✅ ${result.queueName}: ${cleanOutput}`
+          : `❌ ${result.queueName}: ${cleanOutput}`;
+        return { success: result.success, message };
+      }
+
+      // Fallback: if no clean messages, show basic result
+      const message = result.success
+        ? `✅ Очередь "${result.queueName}" выполнена успешно`
+        : `❌ Очередь "${result.queueName}" завершена с ошибками`;
+
+      return { success: result.success, message };
+    } catch (error) {
+      this.logger.error(`❌ Error executing queue ${queueId}:`, error);
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      return { success: false, message: `❌ Ошибка выполнения очереди: ${errorMessage}` };
+    }
+  }
+
+  private async executeQueueDebug(queueId: number): Promise<CommandResult> {
+    this.logger.log(`🚀 Executing queue ${queueId} once (DEBUG MODE)`);
+
+    try {
+      if (!this.telegramQueueService) {
+        return { success: false, message: 'TelegramQueueService недоступен' };
+      }
+
+      const result = await this.telegramQueueService.executeQueueOnce(queueId);
+
+      // Debug mode: show full detailed logs
       const logPreview = result.log.slice(0, 15).join('\n');
       const isLogTruncated = result.log.length > 15;
 
       const message = [
-        `🚀 Выполнение очереди "${result.queueName}" завершено`,
+        `🚀 DEBUG: Выполнение очереди "${result.queueName}" завершено`,
         '',
         `📊 Результат: ${result.success ? '✅ Успешно' : '❌ Ошибки'}`,
         `⏱️ Время выполнения: ${result.executionTime}ms`,
@@ -232,7 +275,7 @@ export class CommandHandler {
         `✅ Успешно: ${result.tasksSuccessful}`,
         `❌ Ошибок: ${result.tasksFailed}`,
         '',
-        '📋 Лог выполнения:',
+        '📋 Полный лог выполнения:',
         logPreview,
         isLogTruncated ? '\n... (лог сокращен)' : '',
         result.error ? `\n💥 Ошибка: ${result.error}` : ''
@@ -240,9 +283,9 @@ export class CommandHandler {
 
       return { success: result.success, message };
     } catch (error) {
-      this.logger.error(`❌ Error executing queue ${queueId}:`, error);
+      this.logger.error(`❌ Error executing queue ${queueId} in debug mode:`, error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      return { success: false, message: `❌ Ошибка выполнения очереди: ${errorMessage}` };
+      return { success: false, message: `❌ DEBUG: Ошибка выполнения очереди: ${errorMessage}` };
     }
   }
 

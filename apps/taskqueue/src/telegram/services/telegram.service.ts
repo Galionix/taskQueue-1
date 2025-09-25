@@ -9,7 +9,8 @@ import { TelegramApiService } from './telegram-api.service';
 import { StatusService } from './status.service';
 import { TelegramQueueService } from './telegram-queue.service';
 import { CommandHandler, AuthHandler } from '../handlers';
-import { KeyboardUtils, MessageFormatter } from '../utils';
+import { KeyboardUtils, MessageFormatter, CronUtils } from '../utils';
+import { QueueEngineService } from '../../queue-engine/queue-engine.service';
 
 @Injectable()
 export class TelegramService implements OnModuleInit, OnModuleDestroy {
@@ -22,7 +23,8 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
     private readonly statusService: StatusService,
     private readonly telegramQueueService: TelegramQueueService,
     private readonly commandHandler: CommandHandler,
-    private readonly authHandler: AuthHandler
+    private readonly authHandler: AuthHandler,
+    private readonly queueEngineService: QueueEngineService
   ) {}
 
   async onModuleInit() {
@@ -42,6 +44,11 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
     // Удаляем webhook и запускаем polling
     await this.telegramApiService.deleteWebhook();
     this.startPolling();
+
+    // Set up notification callback for cron job results
+    this.queueEngineService.setNotificationCallback(async (message: string) => {
+      await this.sendNotification(message);
+    });
   }
 
   /**
@@ -209,10 +216,8 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
       // Отправляем результат как новое сообщение
       await this.telegramApiService.sendMessage(chatId, result.message);
 
-      // Для команд выполнения очередей показываем обновленный список
-      if (data.startsWith('execute_queue_')) {
-        setTimeout(() => this.showQueueList(chatId), 1000);
-      }
+      // Automatic queue list display after execution is disabled
+      // Users can manually return to queue list if needed
 
     } catch (error) {
       await this.telegramApiService.answerCallbackQuery(callbackQuery.id, '❌ Ошибка выполнения');
@@ -301,7 +306,7 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
               queue.state
             }\n` +
             `   🔢 Задач: ${queue.taskCount}\n` +
-            `   ⏰ Расписание: ${queue.schedule}`
+            `   ⏰ Расписание: ${CronUtils.toHumanReadable(queue.schedule)}`
         ),
         '',
         '🚀 Нажмите кнопку для запуска очереди',
