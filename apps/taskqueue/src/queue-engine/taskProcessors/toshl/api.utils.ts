@@ -75,3 +75,74 @@ export async function getBudgetStatus(
   console.log('Fetching budget status');
   return await makeApiRequest<ToshlBudget[]>('/budgets', token);
 }
+
+/**
+ * Weekly summary interface
+ */
+export interface ToshlWeeklySummary {
+  currentWeek: ToshlEntry[];
+  previousWeek: ToshlEntry[];
+  weekStartDate: string;
+  weekEndDate: string;
+  previousWeekStartDate: string;
+  previousWeekEndDate: string;
+}
+
+/**
+ * Get weekly summary from Toshl API
+ */
+export async function getWeeklySummary(
+  token: string, 
+  params: ToshlOperationParams = {}
+): Promise<ToshlWeeklySummary> {
+  // Calculate current week dates (Monday to Sunday)
+  const now = new Date();
+  const currentDayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
+  const daysFromMonday = currentDayOfWeek === 0 ? 6 : currentDayOfWeek - 1; // Convert Sunday to 6
+
+  // Current week start (Monday) and end (Sunday)
+  const weekStartDate = new Date(now);
+  weekStartDate.setDate(now.getDate() - daysFromMonday);
+  weekStartDate.setHours(0, 0, 0, 0);
+
+  const weekEndDate = new Date(weekStartDate);
+  weekEndDate.setDate(weekStartDate.getDate() + 6);
+  weekEndDate.setHours(23, 59, 59, 999);
+
+  // Previous week dates
+  const previousWeekStartDate = new Date(weekStartDate);
+  previousWeekStartDate.setDate(weekStartDate.getDate() - 7);
+
+  const previousWeekEndDate = new Date(weekEndDate);
+  previousWeekEndDate.setDate(weekEndDate.getDate() - 7);
+
+  console.log(`Fetching weekly summary: current week ${weekStartDate.toISOString().split('T')[0]} to ${weekEndDate.toISOString().split('T')[0]}`);
+
+  // Fetch current week expenses
+  const currentWeekParams = {
+    from: weekStartDate.toISOString().split('T')[0],
+    to: weekEndDate.toISOString().split('T')[0],
+    type: 'expense'
+  };
+
+  // Fetch previous week expenses for comparison
+  const previousWeekParams = {
+    from: previousWeekStartDate.toISOString().split('T')[0],
+    to: previousWeekEndDate.toISOString().split('T')[0],
+    type: 'expense'
+  };
+
+  const [currentWeek, previousWeek] = await Promise.all([
+    makeApiRequest<ToshlEntry[]>('/entries', token, currentWeekParams),
+    makeApiRequest<ToshlEntry[]>('/entries', token, previousWeekParams)
+  ]);
+
+  return {
+    currentWeek,
+    previousWeek,
+    weekStartDate: weekStartDate.toISOString().split('T')[0],
+    weekEndDate: weekEndDate.toISOString().split('T')[0],
+    previousWeekStartDate: previousWeekStartDate.toISOString().split('T')[0],
+    previousWeekEndDate: previousWeekEndDate.toISOString().split('T')[0]
+  };
+}

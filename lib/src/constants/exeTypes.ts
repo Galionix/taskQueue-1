@@ -29,8 +29,8 @@ export const ExeTypesPayloadMap = {
     sendNotification: true, // if true, will add screenshot info to storage.message
   },
   [ExeTypes.toshl_mcp_finance]: {
-    mcpServerUrl: 'http://localhost:8080',
-    operation: 'expenses-summary', // expenses-summary, recent-transactions, budget-status
+    // mcpServerUrl: 'http://localhost:8080',
+    operation: 'expenses-summary', // expenses-summary, recent-transactions, budget-status, weekly-summary
     period: 'week', // day, week, month, year (for summary operations)
     limit: 10, // for recent transactions
   },
@@ -67,14 +67,15 @@ filename: string - The filename for the screenshot. Can include {timestamp} plac
 sendNotification: boolean - If true, sends a notification with the screenshot.
     `
   },
+  // mcpServerUrl: string - The URL of the MCP server (default: http://localhost:8080).
   [ExeTypes.toshl_mcp_finance]: {
     name: 'Toshl Finance MCP Integration',
     usage: `
-mcpServerUrl: string - The URL of the MCP server (default: http://localhost:8080).
 operation: string - The operation to perform:
   - 'expenses-summary': Get expense summary for a period
   - 'recent-transactions': Get recent transactions
   - 'budget-status': Get current budget status
+  - 'weekly-summary': Get comprehensive weekly financial summary with categories, comparisons, and insights
 period: string - Time period for summary operations (day, week, month, year).
 limit: number - Number of recent transactions to retrieve (for get-recent-transactions).
 

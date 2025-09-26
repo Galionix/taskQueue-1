@@ -1,7 +1,7 @@
 import { TaskModel } from '@tasks/lib';
 import { taskProcessorType } from '../';
-import { getExpensesSummary, getRecentTransactions, getBudgetStatus } from './api.utils';
-import { formatExpensesSummary, formatRecentTransactions, formatBudgetStatus } from './formatter.utils';
+import { getExpensesSummary, getRecentTransactions, getBudgetStatus, getWeeklySummary } from './api.utils';
+import { formatExpensesSummary, formatRecentTransactions, formatBudgetStatus, formatWeeklySummary } from './formatter.utils';
 
 export const toshlMcpProcessor = (): taskProcessorType => {
   return {
@@ -42,6 +42,12 @@ export const toshlMcpProcessor = (): taskProcessorType => {
             const budgetsData = await getBudgetStatus(toshlToken);
             formattedMessage = formatBudgetStatus(budgetsData);
             result = budgetsData;
+            break;
+          }
+          case 'weekly-summary': {
+            const weeklyData = await getWeeklySummary(toshlToken, params);
+            formattedMessage = await formatWeeklySummary(weeklyData, toshlToken);
+            result = weeklyData;
             break;
           }
           default:
