@@ -144,14 +144,57 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
    */
   private async handleMessage(text: string, chatId: string): Promise<void> {
     if (text === '/start' || text === '/menu') {
-      await this.telegramApiService.sendMessage(chatId, MessageFormatter.formatWelcomeMessage());
-      await this.telegramApiService.sendTaskControlMenu(chatId, KeyboardUtils.createMainMenuKeyboardV2());
+      const welcomeMessage = MessageFormatter.formatWelcomeMessage() + 
+        '\n\n💡 Основные команды:\n' +
+        '• /queues - показать все очереди\n' +
+        '• /status - статус системы\n' +
+        '• /help - справка по командам';
+      await this.telegramApiService.sendMessage(chatId, welcomeMessage);
     } else if (text === '/queues') {
       await this.showQueuesMenu(chatId);
-    } else if (text === '/status') {
-      await this.sendSystemStatus(chatId);
+    } else if (text.startsWith('/exequeue_') || text.startsWith('/exequeue ')) {
+      // Command: /exequeue_queueId or /exequeue queueId (for backward compatibility)
+      const queueIdStr = text.startsWith('/exequeue_') 
+        ? text.replace('/exequeue_', '').trim()
+        : text.replace('/exequeue ', '').trim();
+      const queueId = parseInt(queueIdStr, 10);
+      if (!isNaN(queueId)) {
+        this.logger.log(`🚀 Executing queue ${queueId} via command`);
+        const result = await this.commandHandler.executeCommand(`execute_queue_${queueId}`);
+        await this.telegramApiService.sendMessage(chatId, result.message);
+        
+        this.logger.log('🚀 Queue execution completed, showing compact menu');
+        // Show compact queue menu after execution
+        await this.showCompactQueuesAfterExecution(chatId);
+      } else {
+        await this.telegramApiService.sendMessage(chatId, '❌ Неверный ID очереди. Используйте: /exequeue_[ID] или /exequeue [ID]');
+      }
+    } else if (text.startsWith('/debugqueue_') || text.startsWith('/debugqueue ')) {
+      // Command: /debugqueue_queueId or /debugqueue queueId (for backward compatibility)
+      const queueIdStr = text.startsWith('/debugqueue_')
+        ? text.replace('/debugqueue_', '').trim()
+        : text.replace('/debugqueue ', '').trim();
+      const queueId = parseInt(queueIdStr, 10);
+      if (!isNaN(queueId)) {
+        this.logger.log(`🔍 Executing queue ${queueId} via command`);
+        const result = await this.commandHandler.executeCommand(`execute_queue_debug_${queueId}`);
+        await this.telegramApiService.sendMessage(chatId, result.message);
+        
+        this.logger.log('🔍 Debug queue execution completed, showing compact menu');
+        // Show compact queue menu after execution
+        await this.showCompactQueuesAfterExecution(chatId);
+      } else {
+        await this.telegramApiService.sendMessage(chatId, '❌ Неверный ID очереди. Используйте: /debugqueue_[ID] или /debugqueue [ID]');
+      }
     } else if (text === '/help') {
-      await this.telegramApiService.sendMessage(chatId, MessageFormatter.formatHelpMessage());
+      const result = await this.commandHandler.executeCommand('help');
+      await this.telegramApiService.sendMessage(chatId, result.message);
+    } else if (text === '/status') {
+      const result = await this.commandHandler.executeCommand('status');
+      await this.telegramApiService.sendMessage(chatId, result.message);
+    } else if (text === '/restart') {
+      const result = await this.commandHandler.executeCommand('restart_engine');
+      await this.telegramApiService.sendMessage(chatId, result.message);
     } else if (text === '/security') {
       await this.sendSecurityInfo(chatId);
     } else {
@@ -182,23 +225,18 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
 
     try {
       // Специальная обработка для команд навигации
-      if (data === 'queues_menu') {
-        await this.showQueuesMenu(chatId);
-        await this.telegramApiService.answerCallbackQuery(callbackQuery.id, '📋 Меню очередей');
-        return;
-      }
-
       if (data === 'main_menu') {
-        await this.telegramApiService.sendMessage(
-          chatId,
-          '🏠 Главное меню',
-          KeyboardUtils.createMainMenuKeyboardV2()
-        );
+        const welcomeMessage = '🏠 Главное меню\n\n💡 Основные команды:\n' +
+          '• /queues - показать все очереди\n' +
+          '• /status - статус системы\n' +
+          '• /help - справка по командам\n' +
+          '• /restart - перезапустить движок';
+        await this.telegramApiService.sendMessage(chatId, welcomeMessage);
         await this.telegramApiService.answerCallbackQuery(callbackQuery.id, '🏠 Главное меню');
         return;
       }
 
-      if (data === 'list_queues') {
+      if (data === 'list_queues' || data === 'queues_menu') {
         await this.showQueueList(chatId);
         await this.telegramApiService.answerCallbackQuery(callbackQuery.id, '📋 Список очередей');
         return;
@@ -271,18 +309,14 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
   }
 
   /**
-   * Show queues management menu
+   * Show queues management menu - directly show queue list for efficiency
    */
   private async showQueuesMenu(chatId: string): Promise<void> {
-    await this.telegramApiService.sendMessage(
-      chatId,
-      '📋 Управление очередями\n\nВыберите действие:',
-      KeyboardUtils.createQueuesKeyboard()
-    );
+    await this.showQueueList(chatId);
   }
 
   /**
-   * Show list of queues with action buttons
+   * Show list of queues with command links (no buttons)
    */
   private async showQueueList(chatId: string): Promise<void> {
     try {
@@ -296,29 +330,23 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
         return;
       }
 
-      const message = [
-        `📋 Доступные очереди (${queues.length}):`,
-        '',
-        ...queues.map(
-          (queue, index) =>
-            `${index + 1}. **${queue.name}** (ID: ${queue.id})\n` +
-            `   📊 Статус: ${this.getStateEmojiForService(queue.state)} ${
-              queue.state
-            }\n` +
-            `   🔢 Задач: ${queue.taskCount}\n` +
-            `   ⏰ Расписание: ${CronUtils.toHumanReadable(queue.schedule)}`
-        ),
-        '',
-        '🚀 Нажмите кнопку для запуска очереди',
-        '📊 Или получите детальный статус',
-      ].join('\n');
+      const compactList = queues.map((queue, index) => {
+        const activeEmoji = queue.isActive !== undefined ? (queue.isActive ? '🟢' : '🔴') : '⚪';
+        const statusText = queue.state === 1 ? 'активна' : 'неактивна';
+        return `${index + 1}. ${activeEmoji} **${queue.name}** (ID: ${queue.id})\n` +
+               `   📊 Статус: ${statusText} | 🔢 Задач: ${queue.taskCount}\n` +
+               `   ⏰ ${CronUtils.toHumanReadable(queue.schedule)}\n` +
+               `   🚀 /exequeue_${queue.id}  |  🔍 /debugqueue_${queue.id}`;
+      }).join('\n\n');
 
-      // Создаем клавиатуру с кнопками для каждой очереди
-      const keyboard = KeyboardUtils.createQueueListKeyboard(
-        queues.map(q => ({ id: q.id, name: q.name, isActive: q.isActive }))
-      );
+      const message = `� Доступные очереди (${queues.length}):\n\n${compactList}\n\n` +
+                     '💡 Команды:\n' +
+                     '• /exequeue_[ID] - запустить очередь\n' +
+                     '• /debugqueue_[ID] - запустить с подробным логом\n' +
+                     '• /help - справка по всем командам\n' +
+                     '• /menu - главное меню';
 
-      await this.telegramApiService.sendMessage(chatId, message, keyboard);
+      await this.telegramApiService.sendMessage(chatId, message);
     } catch (error) {
       this.logger.error('Error showing queue list:', error);
       await this.telegramApiService.sendMessage(
@@ -328,7 +356,43 @@ export class TelegramService implements OnModuleInit, OnModuleDestroy {
     }
   }
 
-  private getStateEmojiForService(state: any): string {
+  /**
+   * Show compact queue list after execution with command links
+   */
+  private async showCompactQueuesAfterExecution(chatId: string): Promise<void> {
+    this.logger.log('📋 Showing compact queues after execution');
+    try {
+      const queues = await this.telegramQueueService.getQueuesList();
+      this.logger.log(`📋 Found ${queues.length} queues for compact display`);
+
+      if (queues.length === 0) {
+        this.logger.log('📋 No queues to display - skipping compact menu');
+        return; // Don't show anything if no queues
+      }
+
+      const compactList = queues.map((queue, index) => {
+        const activeEmoji = queue.isActive !== undefined ? (queue.isActive ? '🟢' : '🔴') : '⚪';
+        return `${index + 1}. ${activeEmoji} ${queue.name} (${queue.taskCount} задач)\n` +
+               `   🚀 /exequeue_${queue.id}  |  🔍 /debugqueue_${queue.id}`;
+      }).join('\n\n');
+
+      const message = `📋 Доступные очереди:\n\n${compactList}\n\n` +
+                     '💡 Команды:\n' +
+                     '• /exequeue_[ID] - запустить очередь\n' +
+                     '• /debugqueue_[ID] - запустить с подробным логом\n' +
+                     '• /queues - полное меню управления\n' +
+                     '• /help - справка по всем командам';
+
+      this.logger.log('📋 Sending compact queues message');
+      await this.telegramApiService.sendMessage(chatId, message);
+      this.logger.log('✅ Compact queues message sent successfully');
+    } catch (error) {
+      this.logger.error('❌ Error showing compact queues:', error);
+      // Don't send error message - this is optional functionality
+    }
+  }
+
+  private getStateEmojiForService(state: unknown): string {
     switch (String(state)) {
       case 'running': return '🟢';
       case 'paused': return '🟡';

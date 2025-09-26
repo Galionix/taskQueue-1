@@ -67,81 +67,66 @@ export class KeyboardUtils {
   }
 
   /**
-   * Create queue list keyboard with dynamic buttons for each queue
+   * Create compact queue list keyboard with essential actions only
    */
   static createQueueListKeyboard(queues: Array<{ id: number; name: string; isActive?: boolean }>): InlineKeyboardMarkup {
     const buttons: InlineKeyboardButton[][] = [];
 
-    // Добавляем кнопки для каждой очереди (по 1 в ряд для лучшего отображения статуса)
+    // Добавляем только самые важные кнопки - более компактно (по 2 в ряд)
     for (const queue of queues) {
-      const activeStatus =
-        queue.isActive !== undefined ? (queue.isActive ? '🟢' : '🔴') : '⚪';
+      const activeStatus = queue.isActive !== undefined ? (queue.isActive ? '🟢' : '🔴') : '⚪';
 
-      // Ряд с запуском и статусом
+      // Основной ряд: запуск и статус  
       buttons.push([
         {
           text: `🚀 ${queue.name}`,
           callback_data: `execute_queue_${queue.id}`,
         },
         {
-          text: `� Статус`,
+          text: `📊 Статус`,
           callback_data: `queue_status_${queue.id}`,
         },
       ]);
 
-      // Ряд с debug запуском  
+      // Дополнительные действия в одном ряду
+      const activityButtonText = queue.isActive !== undefined
+        ? queue.isActive ? `🔴 Выкл` : `🟢 Вкл`
+        : `🔄 Переключить`;
+
       buttons.push([
         {
-          text: `🔍 Debug ${queue.name}`,
+          text: `🔍 Debug`,
           callback_data: `execute_queue_debug_${queue.id}`,
         },
-      ]);
-
-      // Ряд с управлением активностью
-      const activityButtonText =
-        queue.isActive !== undefined
-          ? queue.isActive
-            ? `🔴 Деактивировать`
-            : `🟢 Активировать`
-          : `🔄 Переключить`;
-
-      buttons.push([
         {
           text: `${activeStatus} ${activityButtonText}`,
           callback_data: `toggle_activity_${queue.id}`,
         },
       ]);
-
-      // Разделительная строка (только если это не последняя очередь)
-      if (queue !== queues[queues.length - 1]) {
-        buttons.push([{ text: '─────────────', callback_data: 'separator' }]);
-      }
     }
 
-    // Добавляем кнопки навигации
+    // Системные кнопки
     buttons.push([
-      { text: '🔄 Обновить список', callback_data: 'list_queues' },
-      { text: '🏠 Главное меню', callback_data: 'main_menu' },
+      { text: '🔄 Обновить', callback_data: 'list_queues' },
+      { text: '🏠 Меню', callback_data: 'main_menu' },
     ]);
 
     return { inline_keyboard: buttons };
   }
 
   /**
-   * Create updated main menu keyboard with queues management
+   * Create compact main menu keyboard
    */
   static createMainMenuKeyboardV2(): InlineKeyboardMarkup {
     return {
       inline_keyboard: [
         [
-          { text: '📋 Управление очередями', callback_data: 'queues_menu' },
+          { text: '📋 Очереди', callback_data: 'list_queues' },
+          { text: '📊 Статус', callback_data: 'status' },
         ],
         [
-          { text: '📊 Общий статус', callback_data: 'status' },
-          { text: '🔄 Restart Engine', callback_data: 'restart_engine' },
-        ],
-        [
-          { text: '❓ Помощь', callback_data: 'help' },
+          { text: '🔄 Рестарт', callback_data: 'restart_engine' },
+          { text: '❓ Справка', callback_data: 'help' },
         ],
       ],
     };
