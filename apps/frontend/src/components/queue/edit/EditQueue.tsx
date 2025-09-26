@@ -19,34 +19,11 @@ export const EditQueue = ({ q }: { q: QueueModel }) => {
   const [newData, setNewData] = useState<QueueModel>({
     ...q,
     tasks: Array.isArray(q.tasks) ? q.tasks : [],
-  });
-
-  // Debug: log the queue data to see what we're working with
-  console.log('EditQueue - Queue data:', {
-    id: q.id,
-    name: q.name,
-    tasks: q.tasks,
-    tasksType: typeof q.tasks,
-    tasksIsArray: Array.isArray(q.tasks),
-    tasksContent: q.tasks, // Detailed content
-    newDataTasks: newData.tasks, // What we're actually using
-  });
-
-  // Debug: check render conditions
-  console.log('Render conditions:', {
-    isArray: Array.isArray(newData.tasks),
-    length: newData.tasks.length,
-    shouldRenderCurrentTasks:
-      Array.isArray(newData.tasks) && newData.tasks.length > 0,
+    notifyOnEmpty: q.notifyOnEmpty !== undefined ? q.notifyOnEmpty : true,
   });
 
   const shouldRenderCurrentTasks =
     Array.isArray(newData.tasks) && newData.tasks.length > 0;
-  if (shouldRenderCurrentTasks) {
-    console.log('✅ Should render current tasks section');
-  } else {
-    console.log('❌ Will NOT render current tasks section');
-  }
 
   const updateKey =
     (key: keyof QueueModel) => (value: QueueModel[typeof key]) => {
@@ -206,6 +183,7 @@ export const EditQueue = ({ q }: { q: QueueModel }) => {
               setNewData({
                 ...q,
                 tasks: Array.isArray(q.tasks) ? q.tasks : [],
+                notifyOnEmpty: q.notifyOnEmpty !== undefined ? q.notifyOnEmpty : true,
               }); // Reset changes
             }}
             className={s.closeButton}
@@ -239,14 +217,7 @@ export const EditQueue = ({ q }: { q: QueueModel }) => {
               <div className={s.sectionHeader}>🗂️ Current Tasks in Queue:</div>
               <div className={s.tasksGrid}>
                 {tasks
-                  ?.filter((task) => {
-                    const taskInQueue = newData.tasks.includes(task.id);
-                    console.log(
-                      `Task ${task.name} (ID: ${task.id}) in queue:`,
-                      taskInQueue
-                    );
-                    return taskInQueue;
-                  })
+                  ?.filter((task) => newData.tasks.includes(task.id))
                   .map((task) => (
                     <label
                       key={task.id}
@@ -288,14 +259,7 @@ export const EditQueue = ({ q }: { q: QueueModel }) => {
             <div className={s.sectionHeader}>➕ Available Tasks to Add:</div>
             <div className={s.tasksGrid}>
               {tasks
-                ?.filter((task) => {
-                  const taskNotInQueue = !newData.tasks.includes(task.id);
-                  console.log(
-                    `Task ${task.name} (ID: ${task.id}) available to add:`,
-                    taskNotInQueue
-                  );
-                  return taskNotInQueue;
-                })
+                ?.filter((task) => !newData.tasks.includes(task.id))
                 .map((task) => (
                   <label
                     key={task.id}
@@ -353,6 +317,25 @@ export const EditQueue = ({ q }: { q: QueueModel }) => {
         >
           Every 5 minutes: "0 */5 * * * *" | Every hour: "0 0 * * * *"
         </small>
+      </div>
+
+      <div className={s.formGroup}>
+        <label className={s.checkboxLabel}>
+          <input
+            type="checkbox"
+            checked={newData.notifyOnEmpty}
+            onChange={(e) => {
+              updateKey('notifyOnEmpty')(e.target.checked);
+            }}
+            className={s.checkbox}
+          />
+          <span className={s.checkboxText}>
+            📢 Send notifications even when all task results are empty
+            <small style={{ display: 'block', color: '#718096', fontSize: '0.85rem', marginTop: '4px' }}>
+              If unchecked, no notifications will be sent when all tasks return empty results (0, empty array, empty string, etc.)
+            </small>
+          </span>
+        </label>
       </div>
 
       <div

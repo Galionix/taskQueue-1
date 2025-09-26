@@ -14,7 +14,8 @@ export class QueueModel {
     public lockStrategy:
       | (typeof ELockStrategy)[keyof typeof ELockStrategy]
       | null,
-    public isActive: boolean = true
+    public isActive = true,
+    public notifyOnEmpty = true // Отправлять уведомления даже если все задачи вернули пустые результаты
   ) {}
 }
 
@@ -26,7 +27,8 @@ export class CreateQueueDtoModel {
     public lockStrategy:
       | (typeof ELockStrategy)[keyof typeof ELockStrategy]
       | null,
-    public isActive: boolean = true
+    public isActive: boolean,
+    public notifyOnEmpty: boolean
   ) {}
 }
 export class UpdateQueueDtoModel {
@@ -42,7 +44,8 @@ export class UpdateQueueDtoModel {
     public lockStrategy?:
       | (typeof ELockStrategy)[keyof typeof ELockStrategy]
       | null,
-    public isActive?: boolean
+    public isActive?: boolean,
+    public notifyOnEmpty?: boolean
   ) {}
 }
 export interface IQueueService {

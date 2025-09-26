@@ -20,6 +20,7 @@ export const CreateQueue = () => {
     schedule: '0 */5 * * * *',
     lockStrategy: ELockStrategy.pauseOnLock,
     isActive: true,
+    notifyOnEmpty: true,
   });
 
   const updateKey = (key: keyof CreateQueueDtoModel) => (value: string) => {
@@ -53,6 +54,7 @@ export const CreateQueue = () => {
         schedule: '0 */5 * * * *',
         lockStrategy: ELockStrategy.pauseOnLock,
         isActive: true,
+        notifyOnEmpty: true,
       });
       setShown(false);
     }
@@ -99,6 +101,26 @@ export const CreateQueue = () => {
           <small style={{ color: '#718096', fontSize: '0.85rem' }}>
             Every 5 minutes: "0 */5 * * * *" | Every hour: "0 0 * * * *"
           </small>
+        </div>
+
+        <div className={styles.formGroup}>
+          <label className={styles.checkboxLabel}>
+            <input
+              type="checkbox"
+              checked={state.notifyOnEmpty}
+              onChange={(e) => setState({
+                ...state,
+                notifyOnEmpty: e.target.checked
+              })}
+              className={styles.checkbox}
+            />
+            <span className={styles.checkboxText}>
+              📢 Send notifications even when all task results are empty
+              <small style={{ display: 'block', color: '#718096', fontSize: '0.85rem', marginTop: '4px' }}>
+                If unchecked, no notifications will be sent when all tasks return empty results (0, empty array, empty string, etc.)
+              </small>
+            </span>
+          </label>
         </div>
 
         <div className={styles.formGroup}>

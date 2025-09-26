@@ -197,3 +197,32 @@
 .header h3 {
     cursor: pointer
 }
+
+/* Checkbox styles */
+.checkboxLabel {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  cursor: pointer;
+  padding: 12px;
+  border-radius: 8px;
+  transition: background-color 0.2s ease;
+}
+
+.checkboxLabel:hover {
+  background-color: #f7fafc;
+}
+
+.checkbox {
+  margin: 0;
+  width: 18px;
+  height: 18px;
+  accent-color: #667eea;
+  cursor: pointer;
+  margin-top: 2px;
+}
+
+.checkboxText {
+  flex: 1;
+  line-height: 1.4;
+}

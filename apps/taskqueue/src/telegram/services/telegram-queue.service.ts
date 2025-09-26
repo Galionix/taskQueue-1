@@ -14,6 +14,9 @@ export interface QueueExecutionResult {
   tasksExecuted: number;
   tasksSuccessful: number;
   tasksFailed: number;
+  tasksWithEmptyResults?: number;
+  allTasksEmpty?: boolean;
+  shouldSkipNotification?: boolean;
   error?: string;
 }
 
@@ -90,7 +93,10 @@ export class TelegramQueueService {
         `⏱️ Total time: ${engineResult.executionTime}ms`,
         `✅ Successful: ${engineResult.tasksSuccessful}`,
         `❌ Failed: ${engineResult.tasksFailed}`,
-        engineResult.tasksExecuted > 0 ? `📊 Success rate: ${Math.round((engineResult.tasksSuccessful / engineResult.tasksExecuted) * 100)}%` : '📊 No tasks executed'
+        ...(engineResult.tasksWithEmptyResults ? [`🈳 Empty results: ${engineResult.tasksWithEmptyResults}`] : []),
+        engineResult.tasksExecuted > 0 ? `📊 Success rate: ${Math.round((engineResult.tasksSuccessful / engineResult.tasksExecuted) * 100)}%` : '📊 No tasks executed',
+        ...(engineResult.allTasksEmpty ? ['⚪ All task results were empty'] : []),
+        ...(engineResult.shouldSkipNotification ? ['🔇 Notifications skipped due to empty results'] : [])
       ].filter(Boolean);
 
       this.logger.log(`✅ Queue ${queueId} execution completed. Success: ${engineResult.tasksSuccessful}, Failed: ${engineResult.tasksFailed}`);
@@ -105,6 +111,9 @@ export class TelegramQueueService {
         tasksExecuted: engineResult.tasksExecuted,
         tasksSuccessful: engineResult.tasksSuccessful,
         tasksFailed: engineResult.tasksFailed,
+        tasksWithEmptyResults: engineResult.tasksWithEmptyResults,
+        allTasksEmpty: engineResult.allTasksEmpty,
+        shouldSkipNotification: engineResult.shouldSkipNotification,
         error: engineResult.error,
       };
 

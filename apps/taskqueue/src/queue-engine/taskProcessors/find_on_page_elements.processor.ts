@@ -1,4 +1,4 @@
-import { ExeTypes, ExeTypesPayloadMap, TaskModel } from '@tasks/lib';
+import { ExeTypes, ExeTypesPayloadMap, TaskModel, isEmptyResult } from '@tasks/lib';
 
 import { EResourceType, taskProcessors, taskProcessorType } from './';
 import { openOrFocusTab } from './utils/browser.utils';
@@ -49,47 +49,62 @@ export const findOnPageElements = (): taskProcessorType => {
       await currentPage.bringToFront();
       // Find elements based on the provided selector
       const elements = await currentPage.$$(payload.queryToCount);
+      let resultData: unknown = elements.length;
+      let hasContent = false;
+      
       if (elements.length === 0) {
         console.warn(`No elements found for selector: ${payload.queryToCount}`);
+        resultData = 0;
       } else {
         if (payload.extractText) {
-          // templateString: string - A template string to format the output message. Supports placeholders: {count}, {queryToCount}, {url}, if extractText is true - {texts} (comma separated texts from found elements).
           // Extract text from each element if extractText is true
           const texts: string[] = await Promise.all(
             elements.map((el) => el.evaluate((node) => node.textContent))
           );
-          const allEmpty = texts.every((text) => !text || text.trim() === '');
-          if (allEmpty) {
-            return {
-              success: true,
-              elementsFound: false,
-              elements: [],
-            };
+          
+          // Filter out empty texts
+          const nonEmptyTexts = texts.filter(text => text && text.trim() !== '');
+          resultData = nonEmptyTexts;
+          hasContent = nonEmptyTexts.length > 0;
+          
+          if (hasContent) {
+            const formattedMessage = templateString
+              .replace('{count}', elements.length.toString())
+              .replace('{queryToCount}', payload.queryToCount)
+              .replace('{url}', payload.url)
+              .replace('{texts}', nonEmptyTexts.length > 1 ? nonEmptyTexts.join(', ').trim() : nonEmptyTexts[0]?.trim() || '');
+            storage.message += `\n${formattedMessage}`;
           }
-          const formattedMessage = templateString
-            .replace('{count}', elements.length.toString())
-            .replace('{queryToCount}', payload.queryToCount)
-            .replace('{url}', payload.url)
-            .replace('{texts}', texts.length > 1 ? texts.join(', ').trim() : texts[0].trim());
-          storage.message += `\n${formattedMessage}`;
-          // console.log(
-          //   `Extracted text from ${elements.length} elements for selector: ${payload.queryToCount}`
-          // );
         } else {
           // Just count the elements
-          // storage.message += `\nFound ${elements.length} elements for selector: ${payload.queryToCount} on page ${payload.url}`;
-          const formattedMessage = templateString
-            .replace('{count}', elements.length.toString())
-            .replace('{queryToCount}', payload.queryToCount)
-            .replace('{url}', payload.url);
-          storage.message += `\n${formattedMessage}`;
+          resultData = elements.length;
+          hasContent = elements.length > 0;
+          
+          if (hasContent) {
+            const formattedMessage = templateString
+              .replace('{count}', elements.length.toString())
+              .replace('{queryToCount}', payload.queryToCount)
+              .replace('{url}', payload.url);
+            storage.message += `\n${formattedMessage}`;
+          }
         }
         console.log(
           `Found ${elements.length} elements for selector: ${payload.queryToCount}`
         );
       }
+      
+      // Проверяем, является ли результат пустым
+      const isEmpty = isEmptyResult(resultData);
+      
       taskProcessors.removeBlockedResource(EResourceType.browser);
-      return { success: true, elementsFound: elements.length > 0, elements };
+      return { 
+        success: true, 
+        elementsFound: elements.length > 0, 
+        elements,
+        data: resultData,
+        isEmpty: isEmpty,
+        hasContent: hasContent
+      };
     },
   };
 };

@@ -3,11 +3,12 @@ import * as fs from 'fs';
 import { connect } from 'puppeteer-real-browser';
 
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { IQueueEngineService, TaskModel } from '@tasks/lib';
+import { IQueueEngineService, TaskModel, isEmptyResult } from '@tasks/lib';
 import { closeEmptyTabs } from './utils/browser-cleanup.utils';
 
 import { QueueEntity } from '../queue/queue.entity';
 import { QueueService } from '../queue/queue.service';
+import { TaskEntity } from '../task/task.entity';
 import { TaskService } from '../task/task.service';
 import { BrowserService } from '../browser/browser.service';
 import { taskProcessors } from './taskProcessors';
@@ -35,7 +36,7 @@ export class QueueEngineService implements OnModuleInit, IQueueEngineService {
 
   async onModuleInit() {
     await this.initializeBrowsers();
-    
+
     const activeQueues = await this.queueRepository.findActive();
     console.log('activeQueues: ', activeQueues);
 
@@ -46,7 +47,7 @@ export class QueueEngineService implements OnModuleInit, IQueueEngineService {
 
   private async initializeBrowsers() {
     console.log('🚀 Initializing browsers from database...');
-    
+
     // Always start with default browser
     console.log('🌐 Starting default browser...');
     try {
@@ -70,10 +71,10 @@ export class QueueEngineService implements OnModuleInit, IQueueEngineService {
       });
       this.browsers.set('default', defaultBrowser.browser as any);
       defaultBrowser.page.setViewport(null);
-      
+
       // Clean up empty tabs after browser initialization
       await closeEmptyTabs(defaultBrowser.browser as any);
-      
+
       // Set the default browser for task processors (для совместимости)
       taskProcessors.setBrowser(defaultBrowser.browser as any);
       console.log('✅ Default browser started');
@@ -91,7 +92,7 @@ export class QueueEngineService implements OnModuleInit, IQueueEngineService {
         console.log(`🌐 Starting browser: ${browserConfig.name}...`);
         try {
           const profileDir = `C:\\Users\\galio\\AppData\\Local\\Google\\Chrome\\User Data\\${browserConfig.name}`;
-          
+
           // Create directory if it doesn't exist
           if (!fs.existsSync(profileDir)) {
             console.log(`📁 Creating profile directory: ${profileDir}`);
@@ -116,13 +117,13 @@ export class QueueEngineService implements OnModuleInit, IQueueEngineService {
             },
             connectOption: {},
           });
-          
+
           this.browsers.set(browserConfig.name, browser.browser as any);
           browser.page.setViewport(null);
-          
+
           // Clean up empty tabs after browser initialization
           await closeEmptyTabs(browser.browser as any);
-          
+
           console.log(`✅ Browser ${browserConfig.name} started successfully`);
         } catch (error) {
           console.error(`❌ Failed to start browser ${browserConfig.name}:`, error);
@@ -136,7 +137,7 @@ export class QueueEngineService implements OnModuleInit, IQueueEngineService {
 
     console.log(`🎯 Total browsers initialized: ${this.browsers.size}`);
     console.log(`🔧 Available browsers: ${Array.from(this.browsers.keys()).join(', ')}`);
-    
+
     // Pass all browsers to task processors
     taskProcessors.setBrowsers(this.browsers);
   }
@@ -157,6 +158,7 @@ export class QueueEngineService implements OnModuleInit, IQueueEngineService {
       const startTime = Date.now();
       let successfulTasks = 0;
       let failedTasks = 0;
+      let emptyResultTasks = 0;
       const cleanMessages: string[] = [];
 
       try {
@@ -176,9 +178,15 @@ export class QueueEngineService implements OnModuleInit, IQueueEngineService {
         for (const task of tasks) {
           Logger.log(`Processing task: ${task.id} for queue: ${queue.id}`);
           try {
-            await this.processTask(task, storage);
+            const taskResult = await this.processTask(task, storage);
             successfulTasks++;
-            Logger.log(`Task ${task.id} processed successfully.`);
+
+            if (taskResult.isEmpty) {
+              emptyResultTasks++;
+              Logger.log(`Task ${task.id} processed successfully (empty result).`);
+            } else {
+              Logger.log(`Task ${task.id} processed successfully.`);
+            }
 
             // Collect clean messages from task output
             if (storage.message && storage.message.trim()) {
@@ -200,15 +208,19 @@ export class QueueEngineService implements OnModuleInit, IQueueEngineService {
           }
         }
 
+        // Check if we should skip notification for empty results
+        const allTasksEmpty = emptyResultTasks === successfulTasks && failedTasks === 0;
+        const shouldSkipNotification = allTasksEmpty && !queue.notifyOnEmpty;
+
         // Send notification about cron execution result
-        if (this.notificationCallback) {
+        if (this.notificationCallback && !shouldSkipNotification) {
           const executionTime = Date.now() - startTime;
           const queueName = queue.name || `Queue ${queue.id}`;
-          
+
           let message: string;
           if (cleanMessages.length > 0) {
             const cleanOutput = cleanMessages.join('\n');
-            message = failedTasks === 0 
+            message = failedTasks === 0
               ? `⏰ ${queueName}: ${cleanOutput}`
               : `⚠️ ${queueName}: ${cleanOutput} (${failedTasks} failed)`;
           } else {
@@ -218,11 +230,13 @@ export class QueueEngineService implements OnModuleInit, IQueueEngineService {
           }
 
           this.notificationCallback(message);
+        } else if (shouldSkipNotification) {
+          Logger.log(`Skipping notification for queue ${queue.id} - all tasks returned empty results and notifyOnEmpty is false`);
         }
 
       } catch (error) {
         Logger.error(`Critical error in cron job for queue ${queue.id}:`, error);
-        
+
         // Send error notification
         if (this.notificationCallback) {
           const queueName = queue.name || `Queue ${queue.id}`;
@@ -246,9 +260,9 @@ export class QueueEngineService implements OnModuleInit, IQueueEngineService {
             `Task with ID ${taskId} not found for queue: ${queue.id}`
           );
         }
-        return task!;
+        return task;
       })
-      .filter(Boolean);
+      .filter(Boolean) as TaskEntity[];
     console.log('tasks: ', tasks);
     if (!tasks) {
       console.error(`No tasks found for queue: ${queue.id}`);
@@ -291,32 +305,35 @@ export class QueueEngineService implements OnModuleInit, IQueueEngineService {
     console.log('Queue Engine restarted successfully.');
   }
 
-  private async processTask(task: TaskModel, storage: { [key: string]: any }) {
+  private async processTask(task: TaskModel, storage: { [key: string]: unknown }): Promise<{
+    success: boolean;
+    isEmpty?: boolean;
+    result?: unknown;
+  }> {
     // taskProcessors
     const processor = taskProcessors.getProcessor(task.exeType);
     if (!processor) {
       Logger.error(`No processor found for task type: ${task.exeType}`);
-      return;
+      return { success: false };
     }
-    // check blocked resources
-    // if (processor.blocks && processor.blocks.length > 0) {
-    //   // taskProcessors
-    //   for (const block of processor.blocks) {
-    //     if (taskProcessors.isResourceBlocked(block)) {
-    //       Logger.warn(`Resource blocked: ${block}`);
-    //       this.blocked = true;
-    //       return;
-    //     }
-    //   }
-    //   // If all resources are available, remove the blocked state
-    //   this.blocked = false;
-    // }
-    // If no resources are blocked, proceed with task execution
-    // if (this.blocked) {
-    //   Logger.warn(`Task ${task.id} is blocked due to resource constraints.`);
-    //   return;
-    // }
-    await processor.execute(task, storage);
+
+    const result = await processor.execute(task, storage);
+
+    // Проверяем, есть ли информация о пустом результате в самом результате
+    let isEmpty = false;
+    if (result && typeof result === 'object' && 'isEmpty' in result) {
+      isEmpty = Boolean(result.isEmpty);
+    } else if (result && typeof result === 'object' && 'data' in result) {
+      isEmpty = isEmptyResult(result.data);
+    } else {
+      isEmpty = isEmptyResult(result);
+    }
+
+    return {
+      success: true,
+      isEmpty,
+      result
+    };
   }
 
   /**
@@ -328,6 +345,9 @@ export class QueueEngineService implements OnModuleInit, IQueueEngineService {
     tasksExecuted: number;
     tasksSuccessful: number;
     tasksFailed: number;
+    tasksWithEmptyResults?: number;
+    allTasksEmpty?: boolean;
+    shouldSkipNotification?: boolean;
     log: string[];
     cleanMessages: string[]; // Clean messages from task processors
     error?: string;
@@ -379,14 +399,21 @@ export class QueueEngineService implements OnModuleInit, IQueueEngineService {
 
       let successfulTasks = 0;
       let failedTasks = 0;
+      let emptyResultTasks = 0;
 
       // Process tasks one by one
       for (const task of tasks) {
         log.push(`Processing task: ${task.name} (ID: ${task.id})`);
         try {
-          await this.processTask(task, storage);
+          const taskResult = await this.processTask(task, storage);
           successfulTasks++;
-          log.push(`✅ Task ${task.name} completed successfully`);
+
+          if (taskResult.isEmpty) {
+            emptyResultTasks++;
+            log.push(`✅ Task ${task.name} completed successfully (empty result)`);
+          } else {
+            log.push(`✅ Task ${task.name} completed successfully`);
+          }
 
           // Add task output from storage to log and collect clean messages
           if (storage.message && storage.message.trim()) {
@@ -414,8 +441,12 @@ export class QueueEngineService implements OnModuleInit, IQueueEngineService {
 
       const executionTime = Date.now() - startTime;
       log.push(
-        `Execution completed. Success: ${successfulTasks}, Failed: ${failedTasks}, Time: ${executionTime}ms`
+        `Execution completed. Success: ${successfulTasks}, Failed: ${failedTasks}, Empty: ${emptyResultTasks}, Time: ${executionTime}ms`
       );
+
+      // Проверяем, нужно ли отправлять уведомления при пустых результатах
+      const allTasksEmpty = emptyResultTasks === successfulTasks && failedTasks === 0;
+      const shouldSkipNotification = allTasksEmpty && !queue.notifyOnEmpty;
 
       return {
         success: failedTasks === 0,
@@ -423,8 +454,11 @@ export class QueueEngineService implements OnModuleInit, IQueueEngineService {
         tasksExecuted: successfulTasks + failedTasks,
         tasksSuccessful: successfulTasks,
         tasksFailed: failedTasks,
+        tasksWithEmptyResults: emptyResultTasks,
+        allTasksEmpty,
+        shouldSkipNotification,
         log,
-        cleanMessages,
+        cleanMessages: shouldSkipNotification ? [] : cleanMessages, // Очищаем сообщения если не нужно уведомлять
       };
     } catch (error) {
       const executionTime = Date.now() - startTime;
@@ -439,6 +473,9 @@ export class QueueEngineService implements OnModuleInit, IQueueEngineService {
         tasksExecuted: 0,
         tasksSuccessful: 0,
         tasksFailed: 0,
+        tasksWithEmptyResults: 0,
+        allTasksEmpty: false,
+        shouldSkipNotification: false,
         log,
         cleanMessages: [],
         error: errorMessage,
@@ -456,7 +493,7 @@ export class QueueEngineService implements OnModuleInit, IQueueEngineService {
   /**
    * Get browser instance by account name
    */
-  getBrowser(accountName: string = 'default'): Browser | null {
+  getBrowser(accountName = 'default'): Browser | null {
     return this.browsers.get(accountName) || null;
   }
 
