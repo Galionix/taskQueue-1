@@ -5,12 +5,14 @@ import { QueueEntity } from '../queue/queue.entity';
 import { QueueService } from '../queue/queue.service';
 import { TaskEntity } from '../task/task.entity';
 import { TaskService } from '../task/task.service';
+import { BrowserModule } from '../browser/browser.module';
 import { QueueEngineController } from './queue-engine.controller';
 import { QueueEngineService } from './queue-engine.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([TaskEntity, QueueEntity])
+    TypeOrmModule.forFeature([TaskEntity, QueueEntity]),
+    BrowserModule
   ],
   controllers: [QueueEngineController],
   providers: [QueueEngineService, QueueService, TaskService],

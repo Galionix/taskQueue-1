@@ -22,6 +22,6 @@ tests.forEach(cron => {
     const readable = CronUtils.toHumanReadable(cron);
     console.log(`${cron.padEnd(20)} -> ${readable}`);
   } catch (e) {
-    console.log(`${cron.padEnd(20)} -> ERROR: ${e.message}`);
+    console.log(`${cron.padEnd(20)} -> ERROR: ${e instanceof Error ? e.message : String(e)}`);
   }
 });

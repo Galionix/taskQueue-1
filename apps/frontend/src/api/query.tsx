@@ -11,7 +11,7 @@ import {
   DocumentationStats,
 } from '@tasks/lib';
 
-import { queueService, taskService, docsService, queueEngineService } from './api';
+import { queueService, taskService, docsService, queueEngineService, browserService } from './api';
 import { UpdateResult } from 'typeorm';
 
 export const useTasks = () => {
@@ -404,6 +404,115 @@ export const useExecuteQueueOnce = () => {
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ['queue'] });
+    },
+  });
+};
+
+// Browser hooks
+export const useBrowsers = () => {
+  return useQuery({
+    queryKey: ['browsers'],
+    queryFn: browserService.findAll,
+  });
+};
+
+export const useActiveBrowsers = () => {
+  return useQuery({
+    queryKey: ['browsers', 'active'],
+    queryFn: browserService.findActive,
+  });
+};
+
+export const useAvailableBrowsers = () => {
+  return useQuery({
+    queryKey: ['browsers', 'available'],
+    queryFn: browserService.getAvailableBrowsers,
+  });
+};
+
+export const useCreateBrowser = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: browserService.create,
+    onSuccess: (newBrowser) => {
+      queryClient.invalidateQueries({ queryKey: ['browsers'] });
+      console.log('Browser created successfully:', newBrowser);
+    },
+    onError: (error) => {
+      console.error('Error creating browser:', error);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['browsers'] });
+    },
+  });
+};
+
+export const useUpdateBrowser = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, data }: { id: number; data: any }) => browserService.update(id, data),
+    onSuccess: (updatedBrowser) => {
+      queryClient.invalidateQueries({ queryKey: ['browsers'] });
+      console.log('Browser updated successfully:', updatedBrowser);
+    },
+    onError: (error) => {
+      console.error('Error updating browser:', error);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['browsers'] });
+    },
+  });
+};
+
+export const useDeleteBrowser = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: browserService.remove,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['browsers'] });
+      console.log('Browser deleted successfully');
+    },
+    onError: (error) => {
+      console.error('Error deleting browser:', error);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['browsers'] });
+    },
+  });
+};
+
+export const useToggleBrowserActive = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: browserService.toggleActive,
+    onSuccess: (updatedBrowser) => {
+      queryClient.invalidateQueries({ queryKey: ['browsers'] });
+      console.log('Browser activity toggled successfully:', updatedBrowser);
+    },
+    onError: (error) => {
+      console.error('Error toggling browser activity:', error);
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ['browsers'] });
+    },
+  });
+};
+
+export const useRestartBrowserEngines = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: browserService.restartEngines,
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ['browsers'] });
+      console.log('Browser engines restarted successfully:', result);
+    },
+    onError: (error) => {
+      console.error('Error restarting browser engines:', error);
     },
   });
 };

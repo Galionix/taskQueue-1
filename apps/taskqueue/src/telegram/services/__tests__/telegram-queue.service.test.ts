@@ -53,6 +53,10 @@ describe('TelegramQueueService', () => {
       'Processing task: Task 2 (ID: 2)',
       '✅ Task Task 2 completed successfully',
       'Execution completed. Success: 2, Failed: 0, Time: 1500ms'
+    ],
+    cleanMessages: [
+      'Task Task 1 completed successfully',
+      'Task Task 2 completed successfully'
     ]
   };
 
@@ -175,6 +179,10 @@ describe('TelegramQueueService', () => {
         log: [
           ...mockEngineResult.log,
           '❌ Task Task 2 failed: Connection timeout'
+        ],
+        cleanMessages: [
+          'Task Task 1 completed successfully',
+          'Task Task 2 failed: Connection timeout'
         ]
       };
 

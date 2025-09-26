@@ -13,12 +13,14 @@ export const findOnPageElements = (): taskProcessorType => {
     execute: async (data: TaskModel, storage) => {
       taskProcessors.addBlockedResource(EResourceType.browser);
 
-      const browser = taskProcessors.browser;
+      const payload = JSON.parse(data.payload) as typeof payloadType;
+      const browserName = payload.browserName || 'default';
+      
+      const browser = taskProcessors.getBrowser(browserName);
       if (!browser) {
         taskProcessors.removeBlockedResource(EResourceType.browser);
-        throw new Error('Browser instance is not available');
+        throw new Error(`Browser instance '${browserName}' is not available. Available browsers: ${taskProcessors.getAvailableBrowsers().join(', ')}`);
       }
-      const payload = JSON.parse(data.payload) as typeof payloadType;
       const templateString = payload.templateString || '';
       // we assume currently we have an opened correct tab, but just in case we will check it
       const pages = await browser.pages();
@@ -36,8 +38,13 @@ export const findOnPageElements = (): taskProcessorType => {
           throw new Error(`Failed to open tab with URL ${payload.url}: ${error}`);
         }
       } else {
-        // Tab already exists, reload it to ensure we have the latest content
-        await currentPage.reload();
+        // Tab already exists, check if we need to reload it
+        if (payload.needReload) {
+          await currentPage.reload();
+          console.log(`Reloaded page: ${payload.url}`);
+        } else {
+          console.log(`Using current page state without reload: ${payload.url}`);
+        }
       }
       await currentPage.bringToFront();
       // Find elements based on the provided selector

@@ -11,6 +11,8 @@ export const ExeTypesPayloadMap = {
     queryToCount: '#ai-helper-widget',
     extractText: true, // if true, will extract text from the element
     templateString: 'Found {count} elements for selector {queryToCount} on {url}.', // {count}, {queryToCount}, {url}
+    browserName: 'default', // Available browsers: default, galaktionovdmytro
+    needReload: false, // if true, will reload the page before searching; if false, will search on current page state
   },
   [ExeTypes.notify_with_message_from_store]: {
     device: 'pocof6pro',
@@ -35,6 +37,8 @@ url: string - The URL of the page to search. This is used to search for in alrea
 queryToCount: string - The CSS selector to find elements on the page. Counts the number of elements matching this selector is default behavior.
 extractText: boolean - If true, extracts text content from the found elements. If false, just counts the number of elements found.
 templateString: string - A template string to format the output message. Supports placeholders: {count}, {queryToCount}, {url}, if extractText is true - {texts} (comma separated texts from found elements).
+browserName: string - The name of the browser to use for this task. Available browsers are shown dynamically based on your configuration.
+needReload: boolean - If true, will reload the page before searching for elements. If false, will search on the current page state without reloading.
     `
   },
   [ExeTypes.notify_with_message_from_store]: {

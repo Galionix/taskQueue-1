@@ -36,6 +36,14 @@ export const Header: React.FC<HeaderProps> = ({
             🏠 Dashboard
           </Link>
           <Link
+            href="/browsers"
+            className={`${styles.navLink} ${
+              currentPath === '/browsers' ? styles.active : ''
+            }`}
+          >
+            🌐 Browsers
+          </Link>
+          <Link
             href="/docs"
             className={`${styles.navLink} ${
               currentPath === '/docs' ? styles.active : ''

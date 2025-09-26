@@ -8,6 +8,8 @@ import { QueueEntity } from '../queue/queue.entity';
 import { QueueModule } from '../queue/queue.module';
 import { TaskEntity } from '../task/task.entity';
 import { TaskModule } from '../task/task.module';
+import { BrowserEntity } from '../browser/browser.entity';
+import { BrowserModule } from '../browser/browser.module';
 import { DocsModule } from '../docs/docs.module';
 import { ScreenshotCleanupService } from '../services/screenshot-cleanup.service';
 import { AppController } from './app.controller';
@@ -18,13 +20,14 @@ import { AppService } from './app.service';
     TypeOrmModule.forRoot({
       type: 'sqlite',
       database: 'taskDB.db',
-      entities: [TaskEntity, QueueEntity],
+      entities: [TaskEntity, QueueEntity, BrowserEntity],
       synchronize: true,
       autoLoadEntities: true,
     }),
     TaskModule,
     QueueModule,
     QueueEngineModule,
+    BrowserModule,
     PushoverModule,
     TelegramModule,
     DocsModule,

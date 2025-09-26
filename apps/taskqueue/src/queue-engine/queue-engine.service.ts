@@ -1,12 +1,15 @@
 import * as cron from 'cron';
+import * as fs from 'fs';
 import { connect } from 'puppeteer-real-browser';
 
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { IQueueEngineService, TaskModel } from '@tasks/lib';
+import { closeEmptyTabs } from './utils/browser-cleanup.utils';
 
 import { QueueEntity } from '../queue/queue.entity';
 import { QueueService } from '../queue/queue.service';
 import { TaskService } from '../task/task.service';
+import { BrowserService } from '../browser/browser.service';
 import { taskProcessors } from './taskProcessors';
 import { Browser } from 'puppeteer-core';
 
@@ -21,38 +24,121 @@ export class QueueEngineService implements OnModuleInit, IQueueEngineService {
       };
     };
   } = {};
-  private browser: Browser | null = null;
+  private browsers: Map<string, Browser> = new Map();
   private notificationCallback: ((message: string) => void) | null = null;
 
   constructor(
     private readonly queueRepository: QueueService,
-    private readonly taskRepository: TaskService
+    private readonly taskRepository: TaskService,
+    private readonly browserService: BrowserService
   ) {}
 
   async onModuleInit() {
-    // open browser for puppeteer. we need to configure it so it will remember all creds we set earlier
-    const browser = await connect({
-      headless: false, // Set to false if you want to see the browser
-
-      // args: ['--no-sandbox', '--disable-setuid-sandbox'],
-      customConfig: {
-        // executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe', // Adjust this path as needed
-        userDataDir:
-          'C:\\Users\\galio\\AppData\\Local\\Google\\Chrome\\User Data\\Default', // Directory to store user data
-      },
-      connectOption: {},
-      // defaultViewport: null, // Use the default viewport size
-    });
-    this.browser = browser.browser as any;
-    browser.page.setViewport(null); // Set viewport to null to use the default size
-    // Set the browser to be used in the task processors
-    taskProcessors.setBrowser(browser.browser as any);
+    await this.initializeBrowsers();
+    
     const activeQueues = await this.queueRepository.findActive();
     console.log('activeQueues: ', activeQueues);
 
     for (const queue of activeQueues) {
       await this.setupSchedule(queue);
     }
+  }
+
+  private async initializeBrowsers() {
+    console.log('🚀 Initializing browsers from database...');
+    
+    // Always start with default browser
+    console.log('🌐 Starting default browser...');
+    try {
+      const defaultBrowser = await connect({
+        headless: false,
+        args: [
+          '--disable-session-crashed-bubble',
+          '--hide-crash-restore-bubble',
+          '--disable-infobars',
+          '--restore-last-session',
+          '--disable-background-timer-throttling',
+          '--disable-backgrounding-occluded-windows',
+          '--disable-renderer-backgrounding',
+          '--disable-features=TranslateUI',
+          '--disable-ipc-flooding-protection'
+        ],
+        customConfig: {
+          userDataDir: 'C:\\Users\\galio\\AppData\\Local\\Google\\Chrome\\User Data\\Default',
+        },
+        connectOption: {},
+      });
+      this.browsers.set('default', defaultBrowser.browser as any);
+      defaultBrowser.page.setViewport(null);
+      
+      // Clean up empty tabs after browser initialization
+      await closeEmptyTabs(defaultBrowser.browser as any);
+      
+      // Set the default browser for task processors (для совместимости)
+      taskProcessors.setBrowser(defaultBrowser.browser as any);
+      console.log('✅ Default browser started');
+    } catch (error) {
+      console.error('❌ Failed to start default browser:', error);
+      throw error;
+    }
+
+    // Get active browsers from database
+    try {
+      const activeBrowsers = await this.browserService.findActive();
+      console.log(`📋 Found ${activeBrowsers.length} active browsers in database`);
+
+      for (const browserConfig of activeBrowsers) {
+        console.log(`🌐 Starting browser: ${browserConfig.name}...`);
+        try {
+          const profileDir = `C:\\Users\\galio\\AppData\\Local\\Google\\Chrome\\User Data\\${browserConfig.name}`;
+          
+          // Create directory if it doesn't exist
+          if (!fs.existsSync(profileDir)) {
+            console.log(`📁 Creating profile directory: ${profileDir}`);
+            fs.mkdirSync(profileDir, { recursive: true });
+          }
+
+          const browser = await connect({
+            headless: false,
+            args: [
+              '--disable-session-crashed-bubble',
+              '--hide-crash-restore-bubble',
+              '--disable-infobars',
+              '--restore-last-session',
+              '--disable-background-timer-throttling',
+              '--disable-backgrounding-occluded-windows',
+              '--disable-renderer-backgrounding',
+              '--disable-features=TranslateUI',
+              '--disable-ipc-flooding-protection'
+            ],
+            customConfig: {
+              userDataDir: profileDir,
+            },
+            connectOption: {},
+          });
+          
+          this.browsers.set(browserConfig.name, browser.browser as any);
+          browser.page.setViewport(null);
+          
+          // Clean up empty tabs after browser initialization
+          await closeEmptyTabs(browser.browser as any);
+          
+          console.log(`✅ Browser ${browserConfig.name} started successfully`);
+        } catch (error) {
+          console.error(`❌ Failed to start browser ${browserConfig.name}:`, error);
+          console.log(`⚠️ Continuing without ${browserConfig.name} browser...`);
+        }
+      }
+    } catch (error) {
+      console.error('❌ Failed to load browsers from database:', error);
+      console.log('⚠️ Continuing with only default browser...');
+    }
+
+    console.log(`🎯 Total browsers initialized: ${this.browsers.size}`);
+    console.log(`🔧 Available browsers: ${Array.from(this.browsers.keys()).join(', ')}`);
+    
+    // Pass all browsers to task processors
+    taskProcessors.setBrowsers(this.browsers);
   }
 
   private async setupSchedule(queue: QueueEntity) {
@@ -195,35 +281,13 @@ export class QueueEngineService implements OnModuleInit, IQueueEngineService {
     });
     this.schedules = {}; // Clear the schedules
     console.log('Restarting Queue Engine...');
-    // restart browser
-    if (this.browser) {
-      console.log('this.browser: ', this.browser);
-      await this.browser.close();
-      this.browser = null;
+    // restart browsers
+    for (const [accountName, browser] of this.browsers) {
+      console.log(`Closing browser for account: ${accountName}`);
+      await browser.close();
     }
-    const browser = await connect({
-      headless: false, // Set to false if you want to see the browser
-
-      // args: ['--no-sandbox', '--disable-setuid-sandbox'],
-      customConfig: {
-        // executablePath: 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe', // Adjust this path as needed
-        userDataDir:
-          'C:\\Users\\galio\\AppData\\Local\\Google\\Chrome\\User Data\\Default', // Directory to store user data
-      },
-      connectOption: {},
-      // defaultViewport: null, // Use the default viewport size
-    });
-    this.browser = browser.browser as any;
-    browser.page.setViewport(null); // Set viewport to null to use the default size
-    // Set the browser to be used in the task processors
-    taskProcessors.setBrowser(browser.browser as any);
-    // Logic to restart the queue engine, e.g., re-initialize schedules
-    const activeQueues = await this.queueRepository.findActive();
-    console.log('Re-initializing schedules for active queues:', activeQueues);
-
-    for (const queue of activeQueues) {
-      this.setupSchedule(queue);
-    }
+    this.browsers.clear();
+    await this.initializeBrowsers();
     console.log('Queue Engine restarted successfully.');
   }
 
@@ -387,6 +451,20 @@ export class QueueEngineService implements OnModuleInit, IQueueEngineService {
    */
   setNotificationCallback(callback: (message: string) => void): void {
     this.notificationCallback = callback;
+  }
+
+  /**
+   * Get browser instance by account name
+   */
+  getBrowser(accountName: string = 'default'): Browser | null {
+    return this.browsers.get(accountName) || null;
+  }
+
+  /**
+   * Get available browser accounts
+   */
+  getAvailableBrowsers(): string[] {
+    return Array.from(this.browsers.keys());
   }
   // blocked = false;
 }

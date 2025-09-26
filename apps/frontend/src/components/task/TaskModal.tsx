@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 
-import { useCreateTask, useUpdateTask, useTasks } from '@/api/query';
+import { useCreateTask, useUpdateTask, useTasks, useAvailableBrowsers } from '@/api/query';
 import { CreateTaskDtoModel, ExeTypes, ExeTypesDescriptionMap, ExeTypesPayloadMap, TaskModel } from '@tasks/lib';
 
 import { Modal } from '../ui/Modal';
@@ -17,10 +17,20 @@ interface PayloadInfoProps {
 
 const PayloadInfo = ({ exeType, exeTypesStrings }: PayloadInfoProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const { data: availableBrowsers = [] } = useAvailableBrowsers();
   const exeTypeIndex = exeTypesStrings.indexOf(exeType);
   const description = ExeTypesDescriptionMap[exeTypeIndex];
 
   if (!description) return null;
+
+  // Add browser information for find_on_page_elements tasks
+  let enhancedUsage = description.usage.trim();
+  if (exeType === 'find_on_page_elements' && availableBrowsers.length > 0) {
+    enhancedUsage = enhancedUsage.replace(
+      'browserName: string - The name of the browser to use for this task. Available browsers: default, galaktionovdmytro. Default is \'default\'.',
+      `browserName: string - The name of the browser to use for this task. Available browsers: ${availableBrowsers.join(', ')}. Default is 'default'.`
+    );
+  }
 
   return (
     <div className={styles.payloadInfo}>
@@ -40,7 +50,7 @@ const PayloadInfo = ({ exeType, exeTypesStrings }: PayloadInfoProps) => {
       {isExpanded && (
         <div className={styles.payloadInfoContent}>
           <pre className={styles.payloadInfoText}>
-            {description.usage.trim()}
+            {enhancedUsage}
           </pre>
         </div>
       )}

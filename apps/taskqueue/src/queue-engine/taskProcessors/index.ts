@@ -20,7 +20,8 @@ export type taskProcessorsType = {
 };
 
 export class TaskProcessors {
-  public browser: Browser | null = null;
+  public browser: Browser | null = null; // Deprecated: use browsers Map instead
+  public browsers: Map<string, Browser> = new Map();
   public blockedResources: EResourceType[] = [];
   private telegramApiService: any; // Будет инжектиться через DI
   private processors: taskProcessorsType = {} as taskProcessorsType;
@@ -59,6 +60,25 @@ export class TaskProcessors {
 
   public setBrowser(browser: Browser) {
     this.browser = browser;
+  }
+
+  public setBrowsers(browsers: Map<string, Browser>) {
+    this.browsers = browsers;
+    // Set default browser for backward compatibility
+    if (browsers.has('default')) {
+      this.browser = browsers.get('default')!;
+    }
+  }
+
+  public getBrowser(browserName?: string): Browser | null {
+    if (!browserName || browserName === 'default') {
+      return this.browser || this.browsers.get('default') || null;
+    }
+    return this.browsers.get(browserName) || null;
+  }
+
+  public getAvailableBrowsers(): string[] {
+    return Array.from(this.browsers.keys());
   }
 
   public isResourceBlocked(resource: EResourceType): boolean {

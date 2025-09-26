@@ -11,6 +11,27 @@ import type {
   DocumentationStats,
 } from '@tasks/lib';
 
+interface Browser {
+  id: number;
+  name: string;
+  description?: string;
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface CreateBrowserDto {
+  name: string;
+  description?: string;
+  isActive?: boolean;
+}
+
+interface UpdateBrowserDto {
+  name?: string;
+  description?: string;
+  isActive?: boolean;
+}
+
 export const taskService: Omit<ITaskService, 'taskRepository'> = {
   findAll: async () => {
     const response = await axiosInstance.get<
@@ -154,5 +175,51 @@ export const docsService: IDocsService = {
   getDocumentationStats: async () => {
     const response = await axiosInstance.get<ApiResponse<DocumentationStats>>('/docs/stats');
     return response.data.data;
+  },
+};
+
+export const browserService = {
+  findAll: async (): Promise<Browser[]> => {
+    const response = await axiosInstance.get<Browser[]>('/browsers');
+    return response.data;
+  },
+
+  findActive: async (): Promise<Browser[]> => {
+    const response = await axiosInstance.get<Browser[]>('/browsers/active');
+    return response.data;
+  },
+
+  findOne: async (id: number): Promise<Browser> => {
+    const response = await axiosInstance.get<Browser>(`/browsers/${id}`);
+    return response.data;
+  },
+
+  create: async (createBrowserDto: CreateBrowserDto): Promise<Browser> => {
+    const response = await axiosInstance.post<Browser>('/browsers', createBrowserDto);
+    return response.data;
+  },
+
+  update: async (id: number, updateBrowserDto: UpdateBrowserDto): Promise<Browser> => {
+    const response = await axiosInstance.put<Browser>(`/browsers/${id}`, updateBrowserDto);
+    return response.data;
+  },
+
+  remove: async (id: number): Promise<void> => {
+    await axiosInstance.delete(`/browsers/${id}`);
+  },
+
+  toggleActive: async (id: number): Promise<Browser> => {
+    const response = await axiosInstance.put<Browser>(`/browsers/${id}/toggle-active`);
+    return response.data;
+  },
+
+  restartEngines: async (): Promise<{ message: string }> => {
+    const response = await axiosInstance.post<{ message: string }>('/browsers/restart-engines');
+    return response.data;
+  },
+
+  getAvailableBrowsers: async (): Promise<string[]> => {
+    const response = await axiosInstance.get<string[]>('/browsers/available');
+    return response.data;
   },
 };
