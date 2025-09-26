@@ -3,6 +3,8 @@ export enum ExeTypes {
   'notify_with_message_from_store',
   'take_screenshot',
   'toshl_mcp_finance',
+  'google_oauth_setup',
+  'google_calendar',
 }
 
 // this should be manually copied to apps\frontend\src\api\types.ts
@@ -33,6 +35,25 @@ export const ExeTypesPayloadMap = {
     operation: 'expenses-summary', // expenses-summary, recent-transactions, budget-status, weekly-summary
     period: 'week', // day, week, month, year (for summary operations)
     limit: 10, // for recent transactions
+  },
+  [ExeTypes.google_oauth_setup]: {
+    operation: 'get-auth-url', // get-auth-url, exchange-code, refresh-token, revoke-token
+    userId: 'user_123', // user ID to associate tokens with
+    scopes: 'https://www.googleapis.com/auth/calendar.readonly,https://www.googleapis.com/auth/calendar',
+    authCode: '', // authorization code from Google (only for exchange-code)
+  },
+  [ExeTypes.google_calendar]: {
+    operation: 'list-events', // list-events, create-event, get-busy, search-events, get-event, update-event, delete-event
+    userId: 'user_123', // user ID in our system - будет браться из задачи или конфига
+    timeRange: 'week', // day, week, month, custom
+    timeMin: '', // ISO format: '2025-01-01T00:00:00' (optional, overrides timeRange)  
+    timeMax: '', // ISO format: '2025-01-07T23:59:59' (optional, overrides timeRange)
+    calendarId: 'primary', // calendar ID or 'primary' for main calendar
+    query: '', // search query for search-events operation
+    maxResults: 10, // maximum number of events to return
+    // OAuth tokens will be stored in task or user config
+    googleAccessToken: '', // will be set from database/config
+    googleRefreshToken: '', // will be set from database/config
   },
 };
 
@@ -80,6 +101,42 @@ period: string - Time period for summary operations (day, week, month, year).
 limit: number - Number of recent transactions to retrieve (for get-recent-transactions).
 
 Note: Toshl API token is read from TOSHL_API_TOKEN environment variable for security.
+    `
+  },
+  [ExeTypes.google_oauth_setup]: {
+    name: 'Google OAuth Setup',
+    usage: `
+operation: string - The OAuth operation to perform:
+  - 'get-auth-url': Generate authorization URL for user consent
+  - 'exchange-code': Exchange authorization code for tokens
+  - 'refresh-token': Refresh expired access token
+  - 'revoke-token': Revoke access token
+userId: string - User ID to associate tokens with.
+authCode: string - Authorization code from Google (for exchange-code operation).
+scopes: string - Comma-separated OAuth scopes (default: calendar.readonly,calendar).
+
+Returns authorization URL for user to visit, or stores tokens for subsequent calendar operations.
+    `
+  },
+  [ExeTypes.google_calendar]: {
+    name: 'Google Calendar Integration',
+    usage: `
+operation: string - The operation to perform:
+  - 'list-events': Get events from calendar
+  - 'create-event': Create a new event
+  - 'get-busy': Get busy/free information
+  - 'search-events': Search events by query
+  - 'get-event': Get specific event details
+  - 'update-event': Update existing event
+  - 'delete-event': Delete an event
+userId: string - User ID in the system for OAuth token lookup.
+timeRange: string - Time period: 'day', 'week', 'month', or 'custom'.
+timeMin/timeMax: string - Custom date range in ISO format (optional, overrides timeRange).
+calendarId: string - Calendar ID or 'primary' for main calendar.
+query: string - Search query for search-events operation.
+maxResults: number - Maximum number of events to return.
+
+Note: OAuth tokens (googleAccessToken, googleRefreshToken) are managed automatically from user configuration.
     `
   },
 };

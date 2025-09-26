@@ -1,0 +1,20 @@
+{
+  "exeType": "google_calendar",
+  "payload": {
+    "operation": "create-event",
+    "userId": "test_user_001",
+    "event": {
+      "summary": "Тестовое событие",
+      "description": "Создано через TaskQueue API",
+      "start": {
+        "dateTime": "2025-09-27T14:00:00",
+        "timeZone": "Europe/Kiev"
+      },
+      "end": {
+        "dateTime": "2025-09-27T15:00:00",
+        "timeZone": "Europe/Kiev"
+      },
+      "location": "Удаленно"
+    }
+  }
+}

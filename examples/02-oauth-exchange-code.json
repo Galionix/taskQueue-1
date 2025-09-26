@@ -1,0 +1,8 @@
+{
+  "exeType": "google_oauth_setup",
+  "payload": {
+    "operation": "exchange-code",
+    "userId": "test_user_001",
+    "authCode": "ЗАМЕНИТЕ_НА_КОД_ИЗ_GOOGLE"
+  }
+}

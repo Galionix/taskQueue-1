@@ -6,6 +6,8 @@ import { findOnPageElements } from './find_on_page_elements.processor';
 import { notifyWithMessageFromStore } from './notify_with_message_from_store.processor';
 import { takeScreenshot } from './take_screenshot.processor';
 import { toshlMcpProcessor } from './toshl';
+import { googleCalendarProcessor } from './google-calendar-googleapis.processor';
+import { googleOAuthSetupProcessor } from './google-oauth-setup.processor';
 
 export enum EResourceType {
   browser = 'browser',
@@ -38,6 +40,8 @@ export class TaskProcessors {
       notify_with_message_from_store: notifyWithMessageFromStore(),
       take_screenshot: takeScreenshot(),
       toshl_mcp_finance: toshlMcpProcessor(),
+      google_oauth_setup: googleOAuthSetupProcessor(),
+      google_calendar: googleCalendarProcessor(), // Используем googleapis процессор для google_calendar
     };
   }
 

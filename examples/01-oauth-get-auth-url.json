@@ -1,0 +1,8 @@
+{
+  "exeType": "google_oauth_setup",
+  "payload": {
+    "operation": "get-auth-url",
+    "userId": "test_user_001",
+    "scopes": "https://www.googleapis.com/auth/calendar.readonly,https://www.googleapis.com/auth/calendar"
+  }
+}

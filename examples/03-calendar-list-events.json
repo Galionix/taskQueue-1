@@ -1,0 +1,9 @@
+{
+  "exeType": "google_calendar",
+  "payload": {
+    "operation": "list-events",
+    "userId": "test_user_001",
+    "timeRange": "week",
+    "maxResults": 10
+  }
+}

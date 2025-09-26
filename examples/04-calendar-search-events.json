@@ -1,0 +1,10 @@
+{
+  "exeType": "google_calendar",
+  "payload": {
+    "operation": "search-events",
+    "userId": "test_user_001",
+    "query": "встреча",
+    "timeRange": "month",
+    "maxResults": 5
+  }
+}
