@@ -14,6 +14,9 @@
     },
     {
       "path": "./lib"
+    },
+    {
+      "path": "./apps/mcp-servers"
     }
   ],
   "compilerOptions": {

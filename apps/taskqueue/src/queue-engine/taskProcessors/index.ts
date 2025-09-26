@@ -5,6 +5,7 @@ import { ExeTypes, TaskModel } from '@tasks/lib';
 import { findOnPageElements } from './find_on_page_elements.processor';
 import { notifyWithMessageFromStore } from './notify_with_message_from_store.processor';
 import { takeScreenshot } from './take_screenshot.processor';
+import { toshlMcpProcessor } from './toshl-mcp.processor';
 
 export enum EResourceType {
   browser = 'browser',
@@ -36,6 +37,7 @@ export class TaskProcessors {
       find_on_page_elements: findOnPageElements(),
       notify_with_message_from_store: notifyWithMessageFromStore(),
       take_screenshot: takeScreenshot(),
+      toshl_mcp_finance: toshlMcpProcessor(),
     };
   }
 

@@ -2,6 +2,7 @@ export enum ExeTypes {
   'find_on_page_elements',
   'notify_with_message_from_store',
   'take_screenshot',
+  'toshl_mcp_finance',
 }
 
 // this should be manually copied to apps\frontend\src\api\types.ts
@@ -26,6 +27,12 @@ export const ExeTypesPayloadMap = {
     outputPath: 'C:\\screenshots\\',
     filename: 'screenshot_{timestamp}.png',
     sendNotification: true, // if true, will add screenshot info to storage.message
+  },
+  [ExeTypes.toshl_mcp_finance]: {
+    mcpServerUrl: 'http://localhost:8080',
+    operation: 'expenses-summary', // expenses-summary, recent-transactions, budget-status
+    period: 'week', // day, week, month, year (for summary operations)
+    limit: 10, // for recent transactions
   },
 };
 
@@ -58,6 +65,20 @@ message: string - The default message to send if storage.message is empty and se
 outputPath: string - The directory where the screenshot will be saved.
 filename: string - The filename for the screenshot. Can include {timestamp} placeholder.
 sendNotification: boolean - If true, sends a notification with the screenshot.
+    `
+  },
+  [ExeTypes.toshl_mcp_finance]: {
+    name: 'Toshl Finance MCP Integration',
+    usage: `
+mcpServerUrl: string - The URL of the MCP server (default: http://localhost:8080).
+operation: string - The operation to perform:
+  - 'expenses-summary': Get expense summary for a period
+  - 'recent-transactions': Get recent transactions
+  - 'budget-status': Get current budget status
+period: string - Time period for summary operations (day, week, month, year).
+limit: number - Number of recent transactions to retrieve (for get-recent-transactions).
+
+Note: Toshl API token is read from TOSHL_API_TOKEN environment variable for security.
     `
   },
 };
