@@ -6,4 +6,5 @@ export * from './service/docs.service.type.js';
 export * from './service/queue-engine.service.type.js';
 export * from './service/queue.service.type.js';
 export * from './service/task.service.type.js';
+export * from './types/toshl.types.js';
 // @endindex

@@ -5,7 +5,7 @@ import { ExeTypes, TaskModel } from '@tasks/lib';
 import { findOnPageElements } from './find_on_page_elements.processor';
 import { notifyWithMessageFromStore } from './notify_with_message_from_store.processor';
 import { takeScreenshot } from './take_screenshot.processor';
-import { toshlMcpProcessor } from './toshl-mcp.processor';
+import { toshlMcpProcessor } from './toshl';
 
 export enum EResourceType {
   browser = 'browser',
